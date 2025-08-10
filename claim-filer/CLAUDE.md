@@ -10,6 +10,8 @@ A Next.js web application that allows users to fill out a user-friendly web form
 
 ## Current Status
 ✅ **Working**: Form submission and PDF generation
+✅ **Working**: Business information auto-fetch for defendant fields
+✅ **Working**: Address autocomplete for plaintiff/defendant addresses
 ⚠️ **Issue**: Field mapping is overly aggressive - currently fills ALL matching fields with the same data, causing name/data to appear everywhere in the PDF
 🔧 **Next Step**: Implement precise field mapping to fill only the most appropriate fields
 
@@ -61,6 +63,7 @@ claim-filer/
 - **shadcn/ui**: UI component library
 - **Tailwind CSS**: Styling
 - **qpdf**: System tool for PDF processing (installed via Homebrew)
+- **Google Places API**: Business lookup and address autocomplete
 
 ## Setup & Commands
 
@@ -74,7 +77,24 @@ npm install
 
 # Install qpdf system tool (one-time setup)
 brew install qpdf
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local and add your Google Places API key
 ```
+
+### Google Places API Setup
+1. **Get API Key**:
+   - Go to [Google Cloud Console](https://console.developers.google.com/)
+   - Create a new project or select existing
+   - Enable the "Places API (New)" service
+   - Create credentials (API Key)
+
+2. **Configure Environment**:
+   ```bash
+   # Add to .env.local
+   GOOGLE_PLACES_API_KEY=your_actual_api_key_here
+   ```
 
 ### Development
 ```bash

@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { FileText, Download, Send, CheckCircle } from "lucide-react"
+import { FileText, Download, Send, CheckCircle, Search, MapPin } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 
 interface FormData {
@@ -78,6 +78,7 @@ interface FormData {
   militaryDefendantName: string
   
   // Claim Information
+  claimType: string
   claimAmount: string
   claimReason: string
   incidentDate: string
@@ -109,6 +110,9 @@ interface FormData {
 }
 
 export default function PDFFormGenerator() {
+  const [isLoadingBusinessInfo, setIsLoadingBusinessInfo] = useState(false)
+  const [isLoadingPlaintiffAddress, setIsLoadingPlaintiffAddress] = useState(false)
+  const [isLoadingDefendantAddress, setIsLoadingDefendantAddress] = useState(false)
   const [formData, setFormData] = useState<FormData>({
     // Court Information
     courtName: "",
@@ -174,6 +178,7 @@ export default function PDFFormGenerator() {
     militaryDefendantName: "",
     
     // Claim Information
+    claimType: "",
     claimAmount: "",
     claimReason: "",
     incidentDate: "",
@@ -215,6 +220,192 @@ export default function PDFFormGenerator() {
     }))
   }
 
+  const handleFetchBusinessInfo = async () => {
+    if (!formData.defendantName.trim()) {
+      toast({
+        title: "Enter Business Name",
+        description: "Please enter a business name to fetch information.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoadingBusinessInfo(true)
+
+    try {
+      const response = await fetch('/api/fetch-business-info', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          businessName: formData.defendantName,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch business information')
+      }
+
+      const { businessInfo } = result
+
+      setFormData((prev) => ({
+        ...prev,
+        defendantName: businessInfo.name || prev.defendantName,
+        defendantStreetAddress: businessInfo.address || prev.defendantStreetAddress,
+        defendantCity: businessInfo.city || prev.defendantCity,
+        defendantState: businessInfo.state || prev.defendantState,
+        defendantZip: businessInfo.zip || prev.defendantZip,
+        defendantPhone: businessInfo.phone || prev.defendantPhone,
+      }))
+
+      toast({
+        title: "Business Info Fetched",
+        description: "Business information has been automatically filled in.",
+      })
+    } catch (error) {
+      console.error("Business lookup error:", error)
+      toast({
+        title: "Lookup Failed",
+        description: error instanceof Error ? error.message : "Could not find business information. Please enter manually.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoadingBusinessInfo(false)
+    }
+  }
+
+  const handleAutocompleteAddress = async (addressField: string) => {
+    const address = formData[addressField as keyof FormData] as string
+    
+    if (!address.trim()) {
+      toast({
+        title: "Enter Address",
+        description: "Please enter a street address to auto-complete.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Set the appropriate loading state based on which field is being autocompleted
+    if (addressField === 'plaintiffStreetAddress') {
+      setIsLoadingPlaintiffAddress(true)
+    } else if (addressField === 'defendantStreetAddress') {
+      setIsLoadingDefendantAddress(true)
+    }
+
+    try {
+      const response = await fetch('/api/autocomplete-address', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          address: address,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to autocomplete address')
+      }
+
+      const { addressInfo } = result
+
+      // Determine which fields to update based on the input field
+      if (addressField === 'plaintiffStreetAddress') {
+        setFormData((prev) => ({
+          ...prev,
+          plaintiffStreetAddress: addressInfo.street || prev.plaintiffStreetAddress,
+          plaintiffCity: addressInfo.city || prev.plaintiffCity,
+          plaintiffState: addressInfo.state || prev.plaintiffState,
+          plaintiffZip: addressInfo.zip || prev.plaintiffZip,
+        }))
+      } else if (addressField === 'defendantStreetAddress') {
+        setFormData((prev) => ({
+          ...prev,
+          defendantStreetAddress: addressInfo.street || prev.defendantStreetAddress,
+          defendantCity: addressInfo.city || prev.defendantCity,
+          defendantState: addressInfo.state || prev.defendantState,
+          defendantZip: addressInfo.zip || prev.defendantZip,
+        }))
+      }
+
+      toast({
+        title: "Address Completed",
+        description: "Address information has been automatically filled in.",
+      })
+    } catch (error) {
+      console.error("Address autocomplete error:", error)
+      toast({
+        title: "Autocomplete Failed",
+        description: error instanceof Error ? error.message : "Could not complete address. Please enter manually.",
+        variant: "destructive",
+      })
+    } finally {
+      // Clear the appropriate loading state
+      if (addressField === 'plaintiffStreetAddress') {
+        setIsLoadingPlaintiffAddress(false)
+      } else if (addressField === 'defendantStreetAddress') {
+        setIsLoadingDefendantAddress(false)
+      }
+    }
+  }
+
+  const handleGenerateLegalText = async () => {
+    if (!formData.claimType) {
+      toast({
+        title: "Select Claim Type First",
+        description: "Please select a claim type before generating legal text.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const response = await fetch('/api/generate-legal-text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          claimType: formData.claimType,
+          plaintiffName: formData.plaintiffName,
+          defendantName: formData.defendantName,
+          claimAmount: formData.claimAmount,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to generate legal text')
+      }
+
+      // Update the form with generated text
+      setFormData((prev) => ({
+        ...prev,
+        claimReason: result.claimReason,
+        calculationExplanation: result.calculationExplanation,
+      }))
+
+      toast({
+        title: "Legal Text Generated",
+        description: "The claim description and calculation explanation have been populated.",
+      })
+    } catch (error) {
+      console.error("Legal text generation error:", error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to generate legal text. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -232,6 +423,7 @@ export default function PDFFormGenerator() {
       { field: 'defendantCity', name: 'Defendant City' },
       { field: 'defendantState', name: 'Defendant State' },
       { field: 'defendantZip', name: 'Defendant Zip Code' },
+      { field: 'claimType', name: 'Claim Type' },
       { field: 'claimAmount', name: 'Claim Amount' },
       { field: 'claimReason', name: 'Reason for Claim' },
       { field: 'calculationExplanation', name: 'Calculation Explanation' },
@@ -467,6 +659,7 @@ export default function PDFFormGenerator() {
       militaryDefendantName: "",
       
       // Claim Information
+      claimType: "",
       claimAmount: "",
       claimReason: "",
       incidentDate: "",
@@ -645,13 +838,33 @@ export default function PDFFormGenerator() {
                 </div>
                 <div>
                   <Label htmlFor="plaintiffStreetAddress">Street Address *</Label>
-                  <Input
-                    id="plaintiffStreetAddress"
-                    value={formData.plaintiffStreetAddress}
-                    onChange={(e) => handleInputChange("plaintiffStreetAddress", e.target.value)}
-                    required
-                    placeholder="123 Main Street"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="plaintiffStreetAddress"
+                      value={formData.plaintiffStreetAddress}
+                      onChange={(e) => handleInputChange("plaintiffStreetAddress", e.target.value)}
+                      required
+                      placeholder="123 Main Street"
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAutocompleteAddress('plaintiffStreetAddress')}
+                      disabled={isLoadingPlaintiffAddress}
+                      className="px-3"
+                    >
+                      {isLoadingPlaintiffAddress ? (
+                        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <MapPin className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Click the location button to auto-complete city, state, and zip
+                  </p>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   <div>
@@ -719,13 +932,33 @@ export default function PDFFormGenerator() {
               <CardContent className="space-y-4">
                 <div>
                   <Label htmlFor="defendantName">Full Name/Business Name *</Label>
-                  <Input
-                    id="defendantName"
-                    value={formData.defendantName}
-                    onChange={(e) => handleInputChange("defendantName", e.target.value)}
-                    required
-                    placeholder="Defendant's full legal name or business name"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="defendantName"
+                      value={formData.defendantName}
+                      onChange={(e) => handleInputChange("defendantName", e.target.value)}
+                      required
+                      placeholder="Defendant's full legal name or business name"
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleFetchBusinessInfo}
+                      disabled={isLoadingBusinessInfo}
+                      className="px-3"
+                    >
+                      {isLoadingBusinessInfo ? (
+                        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Search className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Click the search button to auto-fetch business information
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="defendantPhone">Phone Number</Label>
@@ -739,13 +972,33 @@ export default function PDFFormGenerator() {
                 </div>
                 <div>
                   <Label htmlFor="defendantStreetAddress">Street Address *</Label>
-                  <Input
-                    id="defendantStreetAddress"
-                    value={formData.defendantStreetAddress}
-                    onChange={(e) => handleInputChange("defendantStreetAddress", e.target.value)}
-                    required
-                    placeholder="123 Main Street"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="defendantStreetAddress"
+                      value={formData.defendantStreetAddress}
+                      onChange={(e) => handleInputChange("defendantStreetAddress", e.target.value)}
+                      required
+                      placeholder="123 Main Street"
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAutocompleteAddress('defendantStreetAddress')}
+                      disabled={isLoadingDefendantAddress}
+                      className="px-3"
+                    >
+                      {isLoadingDefendantAddress ? (
+                        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <MapPin className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Click the location button to auto-complete city, state, and zip
+                  </p>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   <div>
@@ -806,11 +1059,63 @@ export default function PDFFormGenerator() {
             </Card>
           </div>
 
+          {/* Claim Type Selector */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">3. Type of Claim</CardTitle>
+              <CardDescription>Select the type of small claims case that best describes your situation</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="claimType">What type of claim is this? *</Label>
+                <Select
+                  value={formData.claimType}
+                  onValueChange={(value) => handleInputChange("claimType", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select claim type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unpaid-debts">Unpaid debts or loans</SelectItem>
+                    <SelectItem value="breach-contract">Breach of contract</SelectItem>
+                    <SelectItem value="property-damage">Property damage</SelectItem>
+                    <SelectItem value="security-deposit">Security deposit disputes</SelectItem>
+                    <SelectItem value="unpaid-wages">Unpaid wages</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="text-xs text-gray-500 mt-2">
+                  <div className="space-y-1">
+                    <p><strong>Unpaid debts:</strong> Money lent and not repaid, roommate didn't pay their share</p>
+                    <p><strong>Breach of contract:</strong> Contractor didn't complete work, service not provided after payment</p>
+                    <p><strong>Property damage:</strong> Vehicle accidents, rental property damage, broken personal items</p>
+                    <p><strong>Security deposit:</strong> Landlord refuses to return deposit without valid reason</p>
+                    <p><strong>Unpaid wages:</strong> Final paycheck, overtime, or other earned compensation owed</p>
+                  </div>
+                </div>
+              </div>
+              {formData.claimType && (
+                <div className="pt-4 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleGenerateLegalText}
+                    className="w-full"
+                  >
+                    Generate Legal Description for {formData.claimType.replace('-', ' ')}
+                  </Button>
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    This will use AI to generate appropriate legal language for your claim type
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Claim Details */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">3. Your Claim</CardTitle>
-              <CardDescription>Details about what you are claiming</CardDescription>
+              <CardTitle className="text-lg">4. Your Claim Details</CardTitle>
+              <CardDescription>Specific details about what you are claiming</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -885,7 +1190,7 @@ export default function PDFFormGenerator() {
           {/* Pre-suit Demand */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">4. Pre-suit Demand</CardTitle>
+              <CardTitle className="text-lg">5. Pre-suit Demand</CardTitle>
               <CardDescription>Required: You must ask defendant for payment before filing</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -933,7 +1238,7 @@ export default function PDFFormGenerator() {
           {/* Jurisdiction */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">5. Why are you filing at this courthouse?</CardTitle>
+              <CardTitle className="text-lg">6. Why are you filing at this courthouse?</CardTitle>
               <CardDescription>Select the reason this court has jurisdiction</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
