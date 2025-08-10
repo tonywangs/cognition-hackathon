@@ -20,7 +20,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Use Google Places API to search for business information
     const apiKey = process.env.GOOGLE_PLACES_API_KEY
     
     if (!apiKey) {
@@ -30,7 +29,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // First, search for the place
     const searchUrl = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(businessName)}&inputtype=textquery&fields=place_id,name,formatted_address,geometry&key=${apiKey}`
     
     const searchResponse = await fetch(searchUrl)
@@ -45,7 +43,6 @@ export async function POST(request: NextRequest) {
 
     const place = searchData.candidates[0]
     
-    // Get detailed information using Place Details API
     const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,address_components,formatted_phone_number,website&key=${apiKey}`
     
     const detailsResponse = await fetch(detailsUrl)
@@ -60,7 +57,6 @@ export async function POST(request: NextRequest) {
 
     const result = detailsData.result
     
-    // Parse address components
     let address = ''
     let city = ''
     let state = ''
@@ -84,7 +80,6 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // If address parsing failed, use formatted address
     if (!address && result.formatted_address) {
       const addressParts = result.formatted_address.split(', ')
       if (addressParts.length > 0) {

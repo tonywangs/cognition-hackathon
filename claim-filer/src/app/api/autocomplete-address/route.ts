@@ -18,7 +18,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Use Google Places API to get address details
     const apiKey = process.env.GOOGLE_PLACES_API_KEY
     
     if (!apiKey) {
@@ -28,7 +27,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Use Place Autocomplete to find the best match
     const autocompleteUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(address)}&types=address&key=${apiKey}`
     
     const autocompleteResponse = await fetch(autocompleteUrl)
@@ -43,7 +41,6 @@ export async function POST(request: NextRequest) {
 
     const bestPrediction = autocompleteData.predictions[0]
     
-    // Get detailed information using Place Details API
     const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${bestPrediction.place_id}&fields=address_components&key=${apiKey}`
     
     const detailsResponse = await fetch(detailsUrl)
@@ -56,7 +53,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Parse address components
     let street = ''
     let city = ''
     let state = ''
