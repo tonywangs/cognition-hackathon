@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -970,10 +971,14 @@ export default function PDFFormGenerator() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center">
-                <FileText className="w-5 h-5 text-white" />
-              </div>
-              <h1 className="text-xl font-bold text-gray-900">Small Claims Court Form Generator</h1>
+              <Image
+                src="/cuteLawLogo.png"
+                alt="Law Logo"
+                width={40}
+                height={40}
+                className="rounded-lg"
+              />
+              <h1 className="text-xl font-bold text-gray-900">Small Claims Court California Form Generator</h1>
             </div>
           </div>
         </div>
