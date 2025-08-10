@@ -389,7 +389,7 @@ export default function PDFFormGenerator() {
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `small_claims_${formData.firstName}_${formData.lastName}_${Date.now()}.pdf`
+    link.download = `small_claims_${formData.plaintiffName.replace(/\s+/g, '_')}_${Date.now()}.pdf`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)

@@ -4,19 +4,97 @@ import fs from 'fs/promises'
 import path from 'path'
 
 interface FormData {
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  company: string
-  position: string
-  documentType: string
-  agreementType: string
-  effectiveDate: string
-  expirationDate: string
-  confidentialInfo: string
-  additionalTerms: string
-  signature: string
+  // Court Information
+  courtName: string
+  courtAddress: string
+  caseNumber: string
+  caseName: string
+  
+  // Plaintiff Information
+  plaintiffName: string
+  plaintiffPhone: string
+  plaintiffStreetAddress: string
+  plaintiffCity: string
+  plaintiffState: string
+  plaintiffZip: string
+  plaintiffMailingAddress: string
+  plaintiffMailingCity: string
+  plaintiffMailingState: string
+  plaintiffMailingZip: string
+  plaintiffEmail: string
+  
+  // Additional Plaintiff
+  hasSecondPlaintiff: boolean
+  secondPlaintiffName: string
+  secondPlaintiffPhone: string
+  secondPlaintiffStreetAddress: string
+  secondPlaintiffCity: string
+  secondPlaintiffState: string
+  secondPlaintiffZip: string
+  secondPlaintiffMailingAddress: string
+  secondPlaintiffMailingCity: string
+  secondPlaintiffMailingState: string
+  secondPlaintiffMailingZip: string
+  secondPlaintiffEmail: string
+  
+  // Additional Plaintiff Options
+  moreThanTwoPlaintiffs: boolean
+  fictitiousName: boolean
+  paydayLender: boolean
+  
+  // Defendant Information
+  defendantName: string
+  defendantPhone: string
+  defendantStreetAddress: string
+  defendantCity: string
+  defendantState: string
+  defendantZip: string
+  defendantMailingAddress: string
+  defendantMailingCity: string
+  defendantMailingState: string
+  defendantMailingZip: string
+  
+  // Service Information
+  servicePersonName: string
+  servicePersonTitle: string
+  servicePersonAddress: string
+  servicePersonCity: string
+  servicePersonState: string
+  servicePersonZip: string
+  
+  // Additional Defendant Options
+  moreThanOneDefendant: boolean
+  activeMilitaryDuty: boolean
+  militaryDefendantName: string
+  
+  // Claim Information
+  claimAmount: string
+  claimReason: string
+  incidentDate: string
+  incidentStartDate: string
+  incidentEndDate: string
+  calculationExplanation: string
+  
+  // Pre-suit Demand
+  askedForPayment: boolean
+  whyNotAsked: string
+  
+  // Jurisdiction
+  jurisdictionReason: string
+  jurisdictionZip: string
+  
+  // Special Cases
+  attorneyClientDispute: boolean
+  arbitrationFiled: boolean
+  suingPublicEntity: boolean
+  publicEntityClaimDate: string
+  
+  // Filing Limits
+  moreThan12Claims: boolean
+  claimOver2500: boolean
+  
+  // Agreement
+  understandsNoAppeal: boolean
   agreeToTerms: boolean
 }
 
@@ -24,8 +102,8 @@ export async function POST(request: NextRequest) {
   try {
     const formData: FormData = await request.json()
 
-    // Validate required fields
-    const requiredFields = ['firstName', 'lastName', 'email', 'company', 'documentType', 'effectiveDate', 'signature']
+    // Validate required fields (basic ones for now)
+    const requiredFields = ['plaintiffName', 'plaintiffStreetAddress', 'defendantName', 'claimAmount', 'claimReason']
     const missingFields = requiredFields.filter(field => !formData[field as keyof FormData])
     
     if (missingFields.length > 0) {
@@ -56,173 +134,127 @@ export async function POST(request: NextRequest) {
     const fields = form.getFields()
     
     console.log(`📝 Found ${fields.length} form fields in PDF`)
-    
-    // Log field names to help with mapping (first 20 only)
-    if (fields.length > 0) {
-      console.log('📋 First 20 field names:')
-      fields.slice(0, 20).forEach((field, index) => {
-        console.log(`  ${index + 1}. ${field.getName()} (${field.constructor.name})`)
-      })
-    }
 
-    // Map our form data to PDF field names
-    // Based on the field names we saw, let's try to fill the relevant fields
+    // PRECISE FIELD MAPPING - Using exact field names instead of fuzzy matching
+    console.log(`\n🎯 PRECISE FIELD MAPPING STRATEGY:`)
     
-    // Try to fill plaintiff name field
-    try {
-      // Look for fields that might contain name information
-      const nameFields = fields.filter(field => 
-        field.getName().toLowerCase().includes('name') ||
-        field.getName().toLowerCase().includes('plaintiff')
-      )
+    // Create a map of exact field names to data
+    const fieldMappings = new Map([
+      // Court Information
+      ['SC-100[0].Page1[0].CaptionRight[0].County[0].CourtInfo_ft[0]', formData.courtName],
+      ['SC-100[0].Page1[0].CaptionRight[0].CN[0].CaseNumber_ft[0]', formData.caseNumber],
+      ['SC-100[0].Page1[0].CaptionRight[0].CN[0].CaseName_ft[0]', formData.caseName],
       
-      if (nameFields.length > 0) {
-        console.log(`📝 Found ${nameFields.length} potential name fields`)
-        nameFields.forEach(field => {
-          console.log(`  Trying to fill: ${field.getName()}`)
+      // Plaintiff Information - Page 2 Caption
+      ['SC-100[0].Page2[0].PxCaption[0].Plaintiff[0]', formData.plaintiffName],
+      ['SC-100[0].Page2[0].PxCaption[0].CaseNumber_ft[0]', formData.caseNumber],
+      
+      // Plaintiff Information - Primary Fields
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffName1[0]', formData.plaintiffName],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffPhone1[0]', formData.plaintiffPhone],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffAddress1[0]', formData.plaintiffStreetAddress],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffCity1[0]', formData.plaintiffCity],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffState1[0]', formData.plaintiffState],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffZip1[0]', formData.plaintiffZip],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingAddress1[0]', formData.plaintiffMailingAddress || formData.plaintiffStreetAddress],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingCity1[0]', formData.plaintiffMailingCity || formData.plaintiffCity],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingState1[0]', formData.plaintiffMailingState || formData.plaintiffState],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingZip1[0]', formData.plaintiffMailingZip || formData.plaintiffZip],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].EmailAdd1[0]', formData.plaintiffEmail],
+      
+      // Second Plaintiff (if exists)
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffName2[0]', formData.hasSecondPlaintiff ? formData.secondPlaintiffName : ''],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffPhone2[0]', formData.hasSecondPlaintiff ? formData.secondPlaintiffPhone : ''],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffAddress2[0]', formData.hasSecondPlaintiff ? formData.secondPlaintiffStreetAddress : ''],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffCity2[0]', formData.hasSecondPlaintiff ? formData.secondPlaintiffCity : ''],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffState2[0]', formData.hasSecondPlaintiff ? formData.secondPlaintiffState : ''],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffZip2[0]', formData.hasSecondPlaintiff ? formData.secondPlaintiffZip : ''],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingAddress2[0]', formData.hasSecondPlaintiff ? (formData.secondPlaintiffMailingAddress || formData.secondPlaintiffStreetAddress) : ''],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingCity2[0]', formData.hasSecondPlaintiff ? (formData.secondPlaintiffMailingCity || formData.secondPlaintiffCity) : ''],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingState2[0]', formData.hasSecondPlaintiff ? (formData.secondPlaintiffMailingState || formData.secondPlaintiffState) : ''],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingZip2[0]', formData.hasSecondPlaintiff ? (formData.secondPlaintiffMailingZip || formData.secondPlaintiffZip) : ''],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].EmailAdd2[0]', formData.hasSecondPlaintiff ? formData.secondPlaintiffEmail : ''],
+      
+      // Defendant Information
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantName1[0]', formData.defendantName],
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantPhone1[0]', formData.defendantPhone],
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantAddress1[0]', formData.defendantStreetAddress],
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantCity1[0]', formData.defendantCity],
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantState1[0]', formData.defendantState],
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantZip1[0]', formData.defendantZip],
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantMailingAddress1[0]', formData.defendantMailingAddress || formData.defendantStreetAddress],
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantMailingCity1[0]', formData.defendantMailingCity || formData.defendantCity],
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantMailingState1[0]', formData.defendantMailingState || formData.defendantState],
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantMailingZip1[0]', formData.defendantMailingZip || formData.defendantZip],
+      
+      // Service Person Information
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantName2[0]', formData.servicePersonName],
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantJob1[0]', formData.servicePersonTitle],
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantAddress2[0]', formData.servicePersonAddress],
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantCity2[0]', formData.servicePersonCity],
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantState2[0]', formData.servicePersonState],
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantZip2[0]', formData.servicePersonZip],
+      
+      // Military Defendant (if applicable)
+      ['SC-100[0].Page2[0].List2[0].item2[0].FillField1[0]', formData.activeMilitaryDuty ? formData.militaryDefendantName : ''],
+      
+      // Claim Information
+      ['SC-100[0].Page2[0].List3[0].PlaintiffClaimAmount1[0]', formData.claimAmount],
+      ['SC-100[0].Page2[0].List3[0].Lia[0].FillField2[0]', formData.claimReason],
+      
+      // Page 3 Caption
+      ['SC-100[0].Page3[0].PxCaption[0].Plaintiff[0]', formData.plaintiffName],
+      ['SC-100[0].Page3[0].PxCaption[0].CaseNumber_ft[0]', formData.caseNumber],
+      
+      // Incident Dates
+      ['SC-100[0].Page3[0].List3[0].Lib[0].Date1[0]', formData.incidentDate],
+      ['SC-100[0].Page3[0].List3[0].Lib[0].Date2[0]', formData.incidentStartDate],
+      ['SC-100[0].Page3[0].List3[0].Lib[0].Date3[0]', formData.incidentEndDate],
+      
+      // Calculation Explanation
+      ['SC-100[0].Page3[0].List3[0].Lic[0].FillField1[0]', formData.calculationExplanation],
+      
+      // Pre-suit demand explanation (if didn't ask for payment)
+      ['SC-100[0].Page3[0].List4[0].Item4[0].FillField2[0]', !formData.askedForPayment ? formData.whyNotAsked : ''],
+      
+      // Jurisdiction zip code
+      ['SC-100[0].Page3[0].List6[0].item6[0].ZipCode1[0]', formData.jurisdictionZip],
+      
+      // Public entity claim date (if applicable)
+      ['SC-100[0].Page3[0].List8[0].item8[0].Date4[0]', formData.suingPublicEntity ? formData.publicEntityClaimDate : ''],
+      
+      // Page 4 Caption
+      ['SC-100[0].Page4[0].PxCaption[0].Plaintiff[0]', formData.plaintiffName],
+      ['SC-100[0].Page4[0].PxCaption[0].CaseNumber_ft[0]', formData.caseNumber],
+      
+      // Signature Fields
+      ['SC-100[0].Page4[0].Sign[0].PlaintiffName1[0]', formData.plaintiffName],
+      ['SC-100[0].Page4[0].Sign[0].PlaintiffName2[0]', formData.hasSecondPlaintiff ? formData.secondPlaintiffName : ''],
+    ])
+    
+    let fieldsFilledCount = 0
+    let fieldsAttemptedCount = 0
+    
+    // Fill fields using exact mapping
+    for (const [exactFieldName, value] of fieldMappings) {
+      if (value && value.toString().trim() !== '') {
+        fieldsAttemptedCount++
+        const field = fields.find(f => f.getName() === exactFieldName)
+        if (field && field.constructor.name === 'PDFTextField') {
           try {
-            if (field.constructor.name === 'PDFTextField') {
-              ;(field as any).setText(`${formData.firstName} ${formData.lastName}`)
-              console.log(`  ✅ Successfully filled ${field.getName()}`)
-            }
+            ;(field as any).setText(value.toString())
+            console.log(`  ✅ ${exactFieldName.split('.').pop()}: "${value}"`)
+            fieldsFilledCount++
           } catch (e) {
-            console.log(`  ⚠️ Could not fill ${field.getName()}: ${e.message}`)
+            console.log(`  ❌ ${exactFieldName.split('.').pop()}: FAILED - ${e.message}`)
           }
-        })
-      }
-    } catch (error) {
-      console.log('⚠️ Error filling name fields:', error.message)
-    }
-
-    // Try to fill email field
-    try {
-      const emailFields = fields.filter(field => 
-        field.getName().toLowerCase().includes('email')
-      )
-      
-      emailFields.forEach(field => {
-        try {
-          if (field.constructor.name === 'PDFTextField') {
-            ;(field as any).setText(formData.email)
-            console.log(`✅ Filled email field: ${field.getName()}`)
-          }
-        } catch (e) {
-          console.log(`⚠️ Could not fill email field ${field.getName()}: ${e.message}`)
-        }
-      })
-    } catch (error) {
-      console.log('⚠️ Error filling email fields:', error.message)
-    }
-
-    // Try to fill phone field
-    try {
-      const phoneFields = fields.filter(field => 
-        field.getName().toLowerCase().includes('phone') ||
-        field.getName().toLowerCase().includes('tel')
-      )
-      
-      phoneFields.forEach(field => {
-        try {
-          if (field.constructor.name === 'PDFTextField') {
-            ;(field as any).setText(formData.phone || '')
-            console.log(`✅ Filled phone field: ${field.getName()}`)
-          }
-        } catch (e) {
-          console.log(`⚠️ Could not fill phone field ${field.getName()}: ${e.message}`)
-        }
-      })
-    } catch (error) {
-      console.log('⚠️ Error filling phone fields:', error.message)
-    }
-
-    // Try to fill address/company field
-    try {
-      const addressFields = fields.filter(field => 
-        field.getName().toLowerCase().includes('address') ||
-        field.getName().toLowerCase().includes('street') ||
-        field.getName().toLowerCase().includes('company')
-      )
-      
-      addressFields.forEach(field => {
-        try {
-          if (field.constructor.name === 'PDFTextField') {
-            ;(field as any).setText(formData.company)
-            console.log(`✅ Filled address field: ${field.getName()}`)
-          }
-        } catch (e) {
-          console.log(`⚠️ Could not fill address field ${field.getName()}: ${e.message}`)
-        }
-      })
-    } catch (error) {
-      console.log('⚠️ Error filling address fields:', error.message)
-    }
-
-    // Try to fill signature field
-    try {
-      const signatureFields = fields.filter(field => 
-        field.getName().toLowerCase().includes('signature') ||
-        field.getName().toLowerCase().includes('sign')
-      )
-      
-      signatureFields.forEach(field => {
-        try {
-          if (field.constructor.name === 'PDFTextField') {
-            ;(field as any).setText(formData.signature)
-            console.log(`✅ Filled signature field: ${field.getName()}`)
-          }
-        } catch (e) {
-          console.log(`⚠️ Could not fill signature field ${field.getName()}: ${e.message}`)
-        }
-      })
-    } catch (error) {
-      console.log('⚠️ Error filling signature fields:', error.message)
-    }
-
-    // Try to fill claim description fields
-    try {
-      const claimFields = fields.filter(field => 
-        field.getName().toLowerCase().includes('claim') ||
-        field.getName().toLowerCase().includes('description') ||
-        field.getName().toLowerCase().includes('why') ||
-        field.getName().toLowerCase().includes('owe')
-      )
-      
-      claimFields.forEach(field => {
-        try {
-          if (field.constructor.name === 'PDFTextField') {
-            const claimDescription = `${formData.documentType || 'Agreement'} dispute. ${formData.confidentialInfo || ''}`
-            ;(field as any).setText(claimDescription.substring(0, 200)) // Limit length
-            console.log(`✅ Filled claim field: ${field.getName()}`)
-          }
-        } catch (e) {
-          console.log(`⚠️ Could not fill claim field ${field.getName()}: ${e.message}`)
-        }
-      })
-    } catch (error) {
-      console.log('⚠️ Error filling claim fields:', error.message)
-    }
-
-    // Try to fill date fields
-    try {
-      const dateFields = fields.filter(field => 
-        field.getName().toLowerCase().includes('date')
-      )
-      
-      if (dateFields.length > 0 && formData.effectiveDate) {
-        // Fill the first date field with effective date
-        const field = dateFields[0]
-        try {
-          if (field.constructor.name === 'PDFTextField') {
-            ;(field as any).setText(formData.effectiveDate)
-            console.log(`✅ Filled date field: ${field.getName()}`)
-          }
-        } catch (e) {
-          console.log(`⚠️ Could not fill date field ${field.getName()}: ${e.message}`)
+        } else if (!field) {
+          console.log(`  ⚠️ ${exactFieldName}: Field not found in PDF`)
         }
       }
-    } catch (error) {
-      console.log('⚠️ Error filling date fields:', error.message)
     }
+    
+    console.log(`\n📊 SUMMARY: Successfully filled ${fieldsFilledCount}/${fieldsAttemptedCount} fields`)
 
     // Serialize the PDFDocument to bytes
     const pdfBytes = await pdfDoc.save()
@@ -236,12 +268,12 @@ export async function POST(request: NextRequest) {
       message: 'PDF form filled successfully',
       data: {
         submissionId: `sub_${Date.now()}`,
-        documentType: formData.documentType,
+        documentType: 'SC-100 Small Claims',
         submittedAt: new Date().toISOString(),
-        participantName: `${formData.firstName} ${formData.lastName}`,
-        company: formData.company,
+        participantName: formData.plaintiffName,
+        claimAmount: formData.claimAmount,
         pdfBase64: pdfBase64,
-        fieldsFilled: 'Attempted to fill name, email, phone, address, signature, claim description, and date fields'
+        fieldsFilled: `Precisely filled ${fieldsFilledCount}/${fieldsAttemptedCount} fields using exact field name mapping`
       }
     }
 
