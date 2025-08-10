@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -232,8 +232,25 @@ export default function PDFFormGenerator() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [pdfData, setPdfData] = useState<string | null>(null)
+  const [hasManuallySetJurisdictionZip, setHasManuallySetJurisdictionZip] = useState(false)
+
+  // Auto-fill jurisdiction zip with defendant's zip when defendant zip changes
+  useEffect(() => {
+    // Only auto-fill if user hasn't manually set jurisdiction zip and defendant zip exists
+    if (formData.defendantZip && !hasManuallySetJurisdictionZip) {
+      setFormData((prev) => ({
+        ...prev,
+        jurisdictionZip: formData.defendantZip,
+      }))
+    }
+  }, [formData.defendantZip, hasManuallySetJurisdictionZip])
 
   const handleInputChange = (field: keyof FormData, value: string | boolean) => {
+    // Track if user is manually setting jurisdiction zip
+    if (field === 'jurisdictionZip') {
+      setHasManuallySetJurisdictionZip(true)
+    }
+    
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -613,6 +630,11 @@ export default function PDFFormGenerator() {
         jurisdictionReason: result.jurisdictionReason || prev.jurisdictionReason,
         jurisdictionZip: result.jurisdictionZip || prev.jurisdictionZip,
       }))
+      
+      // Mark jurisdiction zip as manually set since it came from generation
+      if (result.jurisdictionZip) {
+        setHasManuallySetJurisdictionZip(true)
+      }
 
       toast({
         title: "Jurisdiction Generated",
@@ -1777,8 +1799,11 @@ export default function PDFFormGenerator() {
                     id="jurisdictionZip"
                     value={formData.jurisdictionZip}
                     onChange={(e) => handleInputChange("jurisdictionZip", e.target.value)}
-                    placeholder="Zip code"
+                    placeholder={formData.defendantZip ? `Defaults to defendant's zip (${formData.defendantZip})` : "Zip code"}
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {formData.jurisdictionZip === formData.defendantZip && !hasManuallySetJurisdictionZip ? "Auto-filled with defendant's zip code" : ""}
+                  </p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
