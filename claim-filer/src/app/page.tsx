@@ -72,22 +72,33 @@ export default function PDFFormGenerator() {
 
     setIsSubmitting(true)
 
-    // Simulate API call to backend PDF generation service
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      const response = await fetch('/api/submit-form', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
 
-      // Here you would typically send the form data to your backend
-      console.log("Form data to be sent to PDF generator:", formData)
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit form')
+      }
+
+      console.log("Form submission successful:", result)
 
       setIsSubmitted(true)
       toast({
         title: "PDF Generated Successfully!",
         description: "Your document has been created and will be available for download shortly.",
       })
-    } catch {
+    } catch (error) {
+      console.error("Form submission error:", error)
       toast({
         title: "Error",
-        description: "Failed to generate PDF. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to generate PDF. Please try again.",
         variant: "destructive",
       })
     } finally {
