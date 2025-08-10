@@ -126,6 +126,7 @@ export default function PDFFormGenerator() {
   const [isLoadingLegalText, setIsLoadingLegalText] = useState(false)
   const [isLoadingPresuitDemand, setIsLoadingPresuitDemand] = useState(false)
   const [isLoadingSecondPlaintiffAddress, setIsLoadingSecondPlaintiffAddress] = useState(false)
+  const [isLoadingCaseName, setIsLoadingCaseName] = useState(false)
   const [formData, setFormData] = useState<FormData>({
     // Court Information
     courtName: "",
@@ -470,6 +471,43 @@ export default function PDFFormGenerator() {
       })
     } finally {
       setIsLoadingLegalText(false)
+    }
+  }
+
+  const handleGenerateCaseName = () => {
+    if (!formData.plaintiffName || !formData.defendantName) {
+      toast({
+        title: "Names Required",
+        description: "Please enter both plaintiff and defendant names first.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoadingCaseName(true)
+
+    try {
+      // Format the case name: "Plaintiff Name vs. Defendant Name"
+      const caseName = `${formData.plaintiffName} vs. ${formData.defendantName}`
+      
+      setFormData((prev) => ({
+        ...prev,
+        caseName: caseName,
+      }))
+
+      toast({
+        title: "Case Name Generated",
+        description: "The case name has been formatted correctly.",
+      })
+    } catch (error) {
+      console.error("Case name generation error:", error)
+      toast({
+        title: "Generation Failed",
+        description: "Could not generate case name. Please enter manually.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoadingCaseName(false)
     }
   }
 
@@ -1516,12 +1554,32 @@ export default function PDFFormGenerator() {
                 </div>
                 <div>
                   <Label htmlFor="caseName">Case Name</Label>
-                  <Input
-                    id="caseName"
-                    value={formData.caseName}
-                    onChange={(e) => handleInputChange("caseName", e.target.value)}
-                    placeholder="Your name vs Defendant name"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="caseName"
+                      value={formData.caseName}
+                      onChange={(e) => handleInputChange("caseName", e.target.value)}
+                      placeholder="Your name vs Defendant name"
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGenerateCaseName}
+                      disabled={isLoadingCaseName}
+                      className="px-3"
+                    >
+                      {isLoadingCaseName ? (
+                        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Wand2 className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Click the wand to auto-generate from plaintiff and defendant names
+                  </p>
                 </div>
               </div>
             </CardContent>
