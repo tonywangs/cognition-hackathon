@@ -517,7 +517,6 @@ export default function PDFFormGenerator() {
               </div>
               <h1 className="text-xl font-bold text-gray-900">Small Claims Court Form Generator</h1>
             </div>
-            <div className="text-sm text-gray-500">Create SC-100 Small Claims forms</div>
           </div>
         </div>
       </header>
