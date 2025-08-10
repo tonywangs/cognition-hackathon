@@ -14,37 +14,193 @@ import { FileText, Download, Send, CheckCircle } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 
 interface FormData {
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  company: string
-  position: string
-  documentType: string
-  agreementType: string
-  effectiveDate: string
-  expirationDate: string
-  confidentialInfo: string
-  additionalTerms: string
-  signature: string
+  // Court Information
+  courtName: string
+  courtAddress: string
+  caseNumber: string
+  caseName: string
+  
+  // Plaintiff Information
+  plaintiffName: string
+  plaintiffPhone: string
+  plaintiffStreetAddress: string
+  plaintiffCity: string
+  plaintiffState: string
+  plaintiffZip: string
+  plaintiffMailingAddress: string
+  plaintiffMailingCity: string
+  plaintiffMailingState: string
+  plaintiffMailingZip: string
+  plaintiffEmail: string
+  
+  // Additional Plaintiff
+  hasSecondPlaintiff: boolean
+  secondPlaintiffName: string
+  secondPlaintiffPhone: string
+  secondPlaintiffStreetAddress: string
+  secondPlaintiffCity: string
+  secondPlaintiffState: string
+  secondPlaintiffZip: string
+  secondPlaintiffMailingAddress: string
+  secondPlaintiffMailingCity: string
+  secondPlaintiffMailingState: string
+  secondPlaintiffMailingZip: string
+  secondPlaintiffEmail: string
+  
+  // Additional Plaintiff Options
+  moreThanTwoPlaintiffs: boolean
+  fictitiousName: boolean
+  paydayLender: boolean
+  
+  // Defendant Information
+  defendantName: string
+  defendantPhone: string
+  defendantStreetAddress: string
+  defendantCity: string
+  defendantState: string
+  defendantZip: string
+  defendantMailingAddress: string
+  defendantMailingCity: string
+  defendantMailingState: string
+  defendantMailingZip: string
+  
+  // Service Information
+  servicePersonName: string
+  servicePersonTitle: string
+  servicePersonAddress: string
+  servicePersonCity: string
+  servicePersonState: string
+  servicePersonZip: string
+  
+  // Additional Defendant Options
+  moreThanOneDefendant: boolean
+  activeMilitaryDuty: boolean
+  militaryDefendantName: string
+  
+  // Claim Information
+  claimAmount: string
+  claimReason: string
+  incidentDate: string
+  incidentStartDate: string
+  incidentEndDate: string
+  calculationExplanation: string
+  
+  // Pre-suit Demand
+  askedForPayment: boolean
+  whyNotAsked: string
+  
+  // Jurisdiction
+  jurisdictionReason: string
+  jurisdictionZip: string
+  
+  // Special Cases
+  attorneyClientDispute: boolean
+  arbitrationFiled: boolean
+  suingPublicEntity: boolean
+  publicEntityClaimDate: string
+  
+  // Filing Limits
+  moreThan12Claims: boolean
+  claimOver2500: boolean
+  
+  // Agreement
+  understandsNoAppeal: boolean
   agreeToTerms: boolean
 }
 
 export default function PDFFormGenerator() {
   const [formData, setFormData] = useState<FormData>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    company: "",
-    position: "",
-    documentType: "",
-    agreementType: "",
-    effectiveDate: "",
-    expirationDate: "",
-    confidentialInfo: "",
-    additionalTerms: "",
-    signature: "",
+    // Court Information
+    courtName: "",
+    courtAddress: "",
+    caseNumber: "",
+    caseName: "",
+    
+    // Plaintiff Information
+    plaintiffName: "",
+    plaintiffPhone: "",
+    plaintiffStreetAddress: "",
+    plaintiffCity: "",
+    plaintiffState: "CA",
+    plaintiffZip: "",
+    plaintiffMailingAddress: "",
+    plaintiffMailingCity: "",
+    plaintiffMailingState: "",
+    plaintiffMailingZip: "",
+    plaintiffEmail: "",
+    
+    // Additional Plaintiff
+    hasSecondPlaintiff: false,
+    secondPlaintiffName: "",
+    secondPlaintiffPhone: "",
+    secondPlaintiffStreetAddress: "",
+    secondPlaintiffCity: "",
+    secondPlaintiffState: "",
+    secondPlaintiffZip: "",
+    secondPlaintiffMailingAddress: "",
+    secondPlaintiffMailingCity: "",
+    secondPlaintiffMailingState: "",
+    secondPlaintiffMailingZip: "",
+    secondPlaintiffEmail: "",
+    
+    // Additional Plaintiff Options
+    moreThanTwoPlaintiffs: false,
+    fictitiousName: false,
+    paydayLender: false,
+    
+    // Defendant Information
+    defendantName: "",
+    defendantPhone: "",
+    defendantStreetAddress: "",
+    defendantCity: "",
+    defendantState: "",
+    defendantZip: "",
+    defendantMailingAddress: "",
+    defendantMailingCity: "",
+    defendantMailingState: "",
+    defendantMailingZip: "",
+    
+    // Service Information
+    servicePersonName: "",
+    servicePersonTitle: "",
+    servicePersonAddress: "",
+    servicePersonCity: "",
+    servicePersonState: "",
+    servicePersonZip: "",
+    
+    // Additional Defendant Options
+    moreThanOneDefendant: false,
+    activeMilitaryDuty: false,
+    militaryDefendantName: "",
+    
+    // Claim Information
+    claimAmount: "",
+    claimReason: "",
+    incidentDate: "",
+    incidentStartDate: "",
+    incidentEndDate: "",
+    calculationExplanation: "",
+    
+    // Pre-suit Demand
+    askedForPayment: false,
+    whyNotAsked: "",
+    
+    // Jurisdiction
+    jurisdictionReason: "",
+    jurisdictionZip: "",
+    
+    // Special Cases
+    attorneyClientDispute: false,
+    arbitrationFiled: false,
+    suingPublicEntity: false,
+    publicEntityClaimDate: "",
+    
+    // Filing Limits
+    moreThan12Claims: false,
+    claimOver2500: false,
+    
+    // Agreement
+    understandsNoAppeal: false,
     agreeToTerms: false,
   })
 
@@ -61,10 +217,108 @@ export default function PDFFormGenerator() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Validate required fields
+    const requiredFields = [
+      { field: 'courtName', name: 'Court Name' },
+      { field: 'courtAddress', name: 'Court Address' },
+      { field: 'plaintiffName', name: 'Plaintiff Name' },
+      { field: 'plaintiffStreetAddress', name: 'Plaintiff Street Address' },
+      { field: 'plaintiffCity', name: 'Plaintiff City' },
+      { field: 'plaintiffState', name: 'Plaintiff State' },
+      { field: 'plaintiffZip', name: 'Plaintiff Zip Code' },
+      { field: 'defendantName', name: 'Defendant Name' },
+      { field: 'defendantStreetAddress', name: 'Defendant Street Address' },
+      { field: 'defendantCity', name: 'Defendant City' },
+      { field: 'defendantState', name: 'Defendant State' },
+      { field: 'defendantZip', name: 'Defendant Zip Code' },
+      { field: 'claimAmount', name: 'Claim Amount' },
+      { field: 'claimReason', name: 'Reason for Claim' },
+      { field: 'calculationExplanation', name: 'Calculation Explanation' },
+      { field: 'jurisdictionReason', name: 'Jurisdiction Reason' },
+    ]
+
+    const missingField = requiredFields.find(({ field }) => !formData[field as keyof FormData])
+    if (missingField) {
+      toast({
+        title: "Missing Required Information",
+        description: `Please fill in the ${missingField.name} field.`,
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validate radio button for pre-suit demand
+    if (formData.askedForPayment === null || formData.askedForPayment === undefined) {
+      toast({
+        title: "Missing Required Information",
+        description: "Please indicate whether you asked the defendant for payment before filing.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validate conditional required fields
+    if (formData.askedForPayment === false && !formData.whyNotAsked) {
+      toast({
+        title: "Missing Required Information",
+        description: "Please explain why you did not ask for payment first.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (formData.suingPublicEntity && !formData.publicEntityClaimDate) {
+      toast({
+        title: "Missing Required Information",
+        description: "Please provide the date you filed your claim with the public entity.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (formData.activeMilitaryDuty && !formData.militaryDefendantName) {
+      toast({
+        title: "Missing Required Information", 
+        description: "Please provide the name of the defendant on military duty.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validate claim amount
+    const claimAmountNum = parseFloat(formData.claimAmount)
+    if (isNaN(claimAmountNum) || claimAmountNum <= 0) {
+      toast({
+        title: "Invalid Claim Amount",
+        description: "Please enter a valid claim amount greater than $0.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (claimAmountNum > 12500) {
+      toast({
+        title: "Claim Amount Too High",
+        description: "Small claims court maximum is $12,500 for individuals or $6,250 for businesses.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validate required checkboxes
+    if (!formData.understandsNoAppeal) {
+      toast({
+        title: "Declaration Required",
+        description: "You must acknowledge that you have no right to appeal in small claims court.",
+        variant: "destructive",
+      })
+      return
+    }
+
     if (!formData.agreeToTerms) {
       toast({
-        title: "Agreement Required",
-        description: "Please agree to the terms and conditions to proceed.",
+        title: "Declaration Required",
+        description: "You must declare under penalty of perjury that the information is true and correct.",
         variant: "destructive",
       })
       return
@@ -116,19 +370,97 @@ export default function PDFFormGenerator() {
 
   const handleReset = () => {
     setFormData({
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      company: "",
-      position: "",
-      documentType: "",
-      agreementType: "",
-      effectiveDate: "",
-      expirationDate: "",
-      confidentialInfo: "",
-      additionalTerms: "",
-      signature: "",
+      // Court Information
+      courtName: "",
+      courtAddress: "",
+      caseNumber: "",
+      caseName: "",
+      
+      // Plaintiff Information
+      plaintiffName: "",
+      plaintiffPhone: "",
+      plaintiffStreetAddress: "",
+      plaintiffCity: "",
+      plaintiffState: "CA",
+      plaintiffZip: "",
+      plaintiffMailingAddress: "",
+      plaintiffMailingCity: "",
+      plaintiffMailingState: "",
+      plaintiffMailingZip: "",
+      plaintiffEmail: "",
+      
+      // Additional Plaintiff
+      hasSecondPlaintiff: false,
+      secondPlaintiffName: "",
+      secondPlaintiffPhone: "",
+      secondPlaintiffStreetAddress: "",
+      secondPlaintiffCity: "",
+      secondPlaintiffState: "",
+      secondPlaintiffZip: "",
+      secondPlaintiffMailingAddress: "",
+      secondPlaintiffMailingCity: "",
+      secondPlaintiffMailingState: "",
+      secondPlaintiffMailingZip: "",
+      secondPlaintiffEmail: "",
+      
+      // Additional Plaintiff Options
+      moreThanTwoPlaintiffs: false,
+      fictitiousName: false,
+      paydayLender: false,
+      
+      // Defendant Information
+      defendantName: "",
+      defendantPhone: "",
+      defendantStreetAddress: "",
+      defendantCity: "",
+      defendantState: "",
+      defendantZip: "",
+      defendantMailingAddress: "",
+      defendantMailingCity: "",
+      defendantMailingState: "",
+      defendantMailingZip: "",
+      
+      // Service Information
+      servicePersonName: "",
+      servicePersonTitle: "",
+      servicePersonAddress: "",
+      servicePersonCity: "",
+      servicePersonState: "",
+      servicePersonZip: "",
+      
+      // Additional Defendant Options
+      moreThanOneDefendant: false,
+      activeMilitaryDuty: false,
+      militaryDefendantName: "",
+      
+      // Claim Information
+      claimAmount: "",
+      claimReason: "",
+      incidentDate: "",
+      incidentStartDate: "",
+      incidentEndDate: "",
+      calculationExplanation: "",
+      
+      // Pre-suit Demand
+      askedForPayment: false,
+      whyNotAsked: "",
+      
+      // Jurisdiction
+      jurisdictionReason: "",
+      jurisdictionZip: "",
+      
+      // Special Cases
+      attorneyClientDispute: false,
+      arbitrationFiled: false,
+      suingPublicEntity: false,
+      publicEntityClaimDate: "",
+      
+      // Filing Limits
+      moreThan12Claims: false,
+      claimOver2500: false,
+      
+      // Agreement
+      understandsNoAppeal: false,
       agreeToTerms: false,
     })
     setIsSubmitted(false)
@@ -143,15 +475,18 @@ export default function PDFFormGenerator() {
               <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
-              <CardTitle className="text-2xl text-green-700">PDF Generated Successfully!</CardTitle>
-              <CardDescription>Your document has been created with the provided information.</CardDescription>
+              <CardTitle className="text-2xl text-green-700">Small Claims Form Generated Successfully!</CardTitle>
+              <CardDescription>Your SC-100 Plaintiff's Claim form has been created with your provided information.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600 mb-2">Document Details:</p>
-                <p className="font-medium">{formData.documentType || "Non-Disclosure Agreement"}</p>
+                <p className="text-sm text-gray-600 mb-2">Form Details:</p>
+                <p className="font-medium">SC-100 Plaintiff's Claim and ORDER to Go to Small Claims Court</p>
                 <p className="text-sm text-gray-500">
-                  Created for: {formData.firstName} {formData.lastName}
+                  Plaintiff: {formData.plaintiffName}
+                </p>
+                <p className="text-sm text-gray-500">
+                  Claim Amount: ${formData.claimAmount}
                 </p>
               </div>
               <div className="flex gap-3 justify-center">
@@ -180,9 +515,9 @@ export default function PDFFormGenerator() {
               <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center">
                 <FileText className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-xl font-bold text-gray-900">PDF Form Generator</h1>
+              <h1 className="text-xl font-bold text-gray-900">Small Claims Court Form Generator</h1>
             </div>
-            <div className="text-sm text-gray-500">Create fillable PDF documents</div>
+            <div className="text-sm text-gray-500">Create SC-100 Small Claims forms</div>
           </div>
         </div>
       </header>
@@ -190,205 +525,509 @@ export default function PDFFormGenerator() {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto p-6">
         <div className="mb-8 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Your PDF Document</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">File Your Small Claims Suit</h2>
           <p className="text-gray-600">
-            Fill out the form below to generate a professional PDF document with your information
+            Complete the SC-100 Plaintiff's Claim form to file your small claims court case in California
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Court Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Court Information</CardTitle>
+              <CardDescription>Enter the court details where you are filing</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="courtName">Superior Court of California, County of *</Label>
+                <Input
+                  id="courtName"
+                  value={formData.courtName}
+                  onChange={(e) => handleInputChange("courtName", e.target.value)}
+                  required
+                  placeholder="e.g., Los Angeles"
+                />
+              </div>
+              <div>
+                <Label htmlFor="courtAddress">Court Address *</Label>
+                <Input
+                  id="courtAddress"
+                  value={formData.courtAddress}
+                  onChange={(e) => handleInputChange("courtAddress", e.target.value)}
+                  required
+                  placeholder="Court street address"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="caseNumber">Case Number</Label>
+                  <Input
+                    id="caseNumber"
+                    value={formData.caseNumber}
+                    onChange={(e) => handleInputChange("caseNumber", e.target.value)}
+                    placeholder="Leave blank - court will assign"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="caseName">Case Name</Label>
+                  <Input
+                    id="caseName"
+                    value={formData.caseName}
+                    onChange={(e) => handleInputChange("caseName", e.target.value)}
+                    placeholder="Your name vs Defendant name"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Personal Information */}
+            {/* Plaintiff Information */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Personal Information</CardTitle>
-                <CardDescription>Enter your basic contact details</CardDescription>
+                <CardTitle className="text-lg">1. Plaintiff Information</CardTitle>
+                <CardDescription>Your information (person filing the claim)</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="firstName">First Name *</Label>
-                    <Input
-                      id="firstName"
-                      value={formData.firstName}
-                      onChange={(e) => handleInputChange("firstName", e.target.value)}
-                      required
-                      placeholder="John"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="lastName">Last Name *</Label>
-                    <Input
-                      id="lastName"
-                      value={formData.lastName}
-                      onChange={(e) => handleInputChange("lastName", e.target.value)}
-                      required
-                      placeholder="Doe"
-                    />
-                  </div>
-                </div>
                 <div>
-                  <Label htmlFor="email">Email Address *</Label>
+                  <Label htmlFor="plaintiffName">Full Name *</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    id="plaintiffName"
+                    value={formData.plaintiffName}
+                    onChange={(e) => handleInputChange("plaintiffName", e.target.value)}
                     required
-                    placeholder="john.doe@example.com"
+                    placeholder="Your full legal name"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="plaintiffPhone">Phone Number</Label>
                   <Input
-                    id="phone"
+                    id="plaintiffPhone"
                     type="tel"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    placeholder="+1 (555) 123-4567"
+                    value={formData.plaintiffPhone}
+                    onChange={(e) => handleInputChange("plaintiffPhone", e.target.value)}
+                    placeholder="(555) 123-4567"
                   />
+                </div>
+                <div>
+                  <Label htmlFor="plaintiffStreetAddress">Street Address *</Label>
+                  <Input
+                    id="plaintiffStreetAddress"
+                    value={formData.plaintiffStreetAddress}
+                    onChange={(e) => handleInputChange("plaintiffStreetAddress", e.target.value)}
+                    required
+                    placeholder="123 Main Street"
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <Label htmlFor="plaintiffCity">City *</Label>
+                    <Input
+                      id="plaintiffCity"
+                      value={formData.plaintiffCity}
+                      onChange={(e) => handleInputChange("plaintiffCity", e.target.value)}
+                      required
+                      placeholder="City"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="plaintiffState">State *</Label>
+                    <Input
+                      id="plaintiffState"
+                      value={formData.plaintiffState}
+                      onChange={(e) => handleInputChange("plaintiffState", e.target.value)}
+                      required
+                      placeholder="CA"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="plaintiffZip">Zip *</Label>
+                    <Input
+                      id="plaintiffZip"
+                      value={formData.plaintiffZip}
+                      onChange={(e) => handleInputChange("plaintiffZip", e.target.value)}
+                      required
+                      placeholder="90210"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="plaintiffEmail">Email Address</Label>
+                  <Input
+                    id="plaintiffEmail"
+                    type="email"
+                    value={formData.plaintiffEmail}
+                    onChange={(e) => handleInputChange("plaintiffEmail", e.target.value)}
+                    placeholder="your.email@example.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="hasSecondPlaintiff"
+                      checked={formData.hasSecondPlaintiff}
+                      onCheckedChange={(checked) => handleInputChange("hasSecondPlaintiff", checked as boolean)}
+                    />
+                    <Label htmlFor="hasSecondPlaintiff" className="text-sm">
+                      Add second plaintiff
+                    </Label>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Company Information */}
+            {/* Defendant Information */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Company Information</CardTitle>
-                <CardDescription>Enter your organization details</CardDescription>
+                <CardTitle className="text-lg">2. Defendant Information</CardTitle>
+                <CardDescription>Information about the person/business you are suing</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="company">Company Name *</Label>
+                  <Label htmlFor="defendantName">Full Name/Business Name *</Label>
                   <Input
-                    id="company"
-                    value={formData.company}
-                    onChange={(e) => handleInputChange("company", e.target.value)}
+                    id="defendantName"
+                    value={formData.defendantName}
+                    onChange={(e) => handleInputChange("defendantName", e.target.value)}
                     required
-                    placeholder="Acme Corporation"
+                    placeholder="Defendant's full legal name or business name"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="position">Position/Title</Label>
+                  <Label htmlFor="defendantPhone">Phone Number</Label>
                   <Input
-                    id="position"
-                    value={formData.position}
-                    onChange={(e) => handleInputChange("position", e.target.value)}
-                    placeholder="Software Engineer"
+                    id="defendantPhone"
+                    type="tel"
+                    value={formData.defendantPhone}
+                    onChange={(e) => handleInputChange("defendantPhone", e.target.value)}
+                    placeholder="(555) 123-4567"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="documentType">Document Type *</Label>
-                  <Select
-                    value={formData.documentType}
-                    onValueChange={(value) => handleInputChange("documentType", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select document type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="nda">Non-Disclosure Agreement</SelectItem>
-                      <SelectItem value="employment">Employment Contract</SelectItem>
-                      <SelectItem value="service">Service Agreement</SelectItem>
-                      <SelectItem value="consulting">Consulting Agreement</SelectItem>
-                      <SelectItem value="partnership">Partnership Agreement</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="defendantStreetAddress">Street Address *</Label>
+                  <Input
+                    id="defendantStreetAddress"
+                    value={formData.defendantStreetAddress}
+                    onChange={(e) => handleInputChange("defendantStreetAddress", e.target.value)}
+                    required
+                    placeholder="123 Main Street"
+                  />
                 </div>
-                <div>
-                  <Label htmlFor="agreementType">Agreement Type</Label>
-                  <Select
-                    value={formData.agreementType}
-                    onValueChange={(value) => handleInputChange("agreementType", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select agreement type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mutual">Mutual Agreement</SelectItem>
-                      <SelectItem value="unilateral">Unilateral Agreement</SelectItem>
-                      <SelectItem value="standard">Standard Agreement</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <Label htmlFor="defendantCity">City *</Label>
+                    <Input
+                      id="defendantCity"
+                      value={formData.defendantCity}
+                      onChange={(e) => handleInputChange("defendantCity", e.target.value)}
+                      required
+                      placeholder="City"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="defendantState">State *</Label>
+                    <Input
+                      id="defendantState"
+                      value={formData.defendantState}
+                      onChange={(e) => handleInputChange("defendantState", e.target.value)}
+                      required
+                      placeholder="CA"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="defendantZip">Zip *</Label>
+                    <Input
+                      id="defendantZip"
+                      value={formData.defendantZip}
+                      onChange={(e) => handleInputChange("defendantZip", e.target.value)}
+                      required
+                      placeholder="90210"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="activeMilitaryDuty"
+                      checked={formData.activeMilitaryDuty}
+                      onCheckedChange={(checked) => handleInputChange("activeMilitaryDuty", checked as boolean)}
+                    />
+                    <Label htmlFor="activeMilitaryDuty" className="text-sm">
+                      Defendant is on active military duty
+                    </Label>
+                  </div>
+                  {formData.activeMilitaryDuty && (
+                    <div>
+                      <Label htmlFor="militaryDefendantName">Military Defendant Name</Label>
+                      <Input
+                        id="militaryDefendantName"
+                        value={formData.militaryDefendantName}
+                        onChange={(e) => handleInputChange("militaryDefendantName", e.target.value)}
+                        placeholder="Name of defendant on military duty"
+                      />
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Document Details */}
+          {/* Claim Details */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Document Details</CardTitle>
-              <CardDescription>Specify the terms and conditions for your document</CardDescription>
+              <CardTitle className="text-lg">3. Your Claim</CardTitle>
+              <CardDescription>Details about what you are claiming</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="effectiveDate">Effective Date *</Label>
-                  <Input
-                    id="effectiveDate"
-                    type="date"
-                    value={formData.effectiveDate}
-                    onChange={(e) => handleInputChange("effectiveDate", e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="expirationDate">Expiration Date</Label>
-                  <Input
-                    id="expirationDate"
-                    type="date"
-                    value={formData.expirationDate}
-                    onChange={(e) => handleInputChange("expirationDate", e.target.value)}
-                  />
-                </div>
-              </div>
               <div>
-                <Label htmlFor="confidentialInfo">Confidential Information Description</Label>
-                <Textarea
-                  id="confidentialInfo"
-                  value={formData.confidentialInfo}
-                  onChange={(e) => handleInputChange("confidentialInfo", e.target.value)}
-                  placeholder="Describe the type of confidential information that will be shared..."
-                  rows={3}
+                <Label htmlFor="claimAmount">Amount you are claiming (in dollars) *</Label>
+                <Input
+                  id="claimAmount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="12500"
+                  value={formData.claimAmount}
+                  onChange={(e) => handleInputChange("claimAmount", e.target.value)}
+                  required
+                  placeholder="0.00"
                 />
+                <p className="text-xs text-gray-500 mt-1">Maximum: $12,500 for individuals, $6,250 for businesses</p>
               </div>
               <div>
-                <Label htmlFor="additionalTerms">Additional Terms & Conditions</Label>
+                <Label htmlFor="claimReason">Why does the defendant owe you money? *</Label>
                 <Textarea
-                  id="additionalTerms"
-                  value={formData.additionalTerms}
-                  onChange={(e) => handleInputChange("additionalTerms", e.target.value)}
-                  placeholder="Enter any additional terms, conditions, or special clauses..."
+                  id="claimReason"
+                  value={formData.claimReason}
+                  onChange={(e) => handleInputChange("claimReason", e.target.value)}
+                  required
+                  placeholder="Explain what happened and why the defendant owes you money..."
                   rows={4}
                 />
               </div>
               <div>
-                <Label htmlFor="signature">Digital Signature *</Label>
+                <Label htmlFor="incidentDate">When did this happen? (Date)</Label>
                 <Input
-                  id="signature"
-                  value={formData.signature}
-                  onChange={(e) => handleInputChange("signature", e.target.value)}
+                  id="incidentDate"
+                  type="date"
+                  value={formData.incidentDate}
+                  onChange={(e) => handleInputChange("incidentDate", e.target.value)}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="incidentStartDate">If no specific date, start date:</Label>
+                  <Input
+                    id="incidentStartDate"
+                    type="date"
+                    value={formData.incidentStartDate}
+                    onChange={(e) => handleInputChange("incidentStartDate", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="incidentEndDate">Through (end date):</Label>
+                  <Input
+                    id="incidentEndDate"
+                    type="date"
+                    value={formData.incidentEndDate}
+                    onChange={(e) => handleInputChange("incidentEndDate", e.target.value)}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="calculationExplanation">How did you calculate the money owed? *</Label>
+                <Textarea
+                  id="calculationExplanation"
+                  value={formData.calculationExplanation}
+                  onChange={(e) => handleInputChange("calculationExplanation", e.target.value)}
                   required
-                  placeholder="Type your full name as digital signature"
+                  placeholder="Explain your calculation (do not include court costs or service fees)..."
+                  rows={3}
                 />
               </div>
             </CardContent>
           </Card>
 
-          {/* Agreement and Submit */}
+          {/* Pre-suit Demand */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">4. Pre-suit Demand</CardTitle>
+              <CardDescription>Required: You must ask defendant for payment before filing</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-base font-medium">Did you ask the defendant to pay you before filing this lawsuit? *</Label>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="askedYes"
+                      name="askedForPayment"
+                      checked={formData.askedForPayment === true}
+                      onChange={() => handleInputChange("askedForPayment", true)}
+                    />
+                    <Label htmlFor="askedYes">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="askedNo"
+                      name="askedForPayment"
+                      checked={formData.askedForPayment === false}
+                      onChange={() => handleInputChange("askedForPayment", false)}
+                    />
+                    <Label htmlFor="askedNo">No</Label>
+                  </div>
+                </div>
+              </div>
+              {formData.askedForPayment === false && (
+                <div>
+                  <Label htmlFor="whyNotAsked">If no, explain why not: *</Label>
+                  <Textarea
+                    id="whyNotAsked"
+                    value={formData.whyNotAsked}
+                    onChange={(e) => handleInputChange("whyNotAsked", e.target.value)}
+                    required={formData.askedForPayment === false}
+                    placeholder="Explain why you did not ask for payment first..."
+                    rows={3}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Jurisdiction */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">5. Why are you filing at this courthouse?</CardTitle>
+              <CardDescription>Select the reason this court has jurisdiction</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="jurisdictionReason">This courthouse covers the area where: *</Label>
+                <Select
+                  value={formData.jurisdictionReason}
+                  onValueChange={(value) => handleInputChange("jurisdictionReason", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select jurisdiction reason" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="defendant-lives">Defendant lives or does business</SelectItem>
+                    <SelectItem value="property-damaged">Plaintiff's property was damaged</SelectItem>
+                    <SelectItem value="plaintiff-injured">Plaintiff was injured</SelectItem>
+                    <SelectItem value="contract-location">Contract was made, signed, performed, or broken</SelectItem>
+                    <SelectItem value="buyer-contract">Buyer/lessee signed contract or lives (personal/family goods)</SelectItem>
+                    <SelectItem value="retail-installment">Buyer signed retail installment contract</SelectItem>
+                    <SelectItem value="vehicle-finance">Vehicle finance sale location</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="jurisdictionZip">Zip code of the place checked above:</Label>
+                <Input
+                  id="jurisdictionZip"
+                  value={formData.jurisdictionZip}
+                  onChange={(e) => handleInputChange("jurisdictionZip", e.target.value)}
+                  placeholder="Zip code"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Special Cases and Declarations */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Additional Questions</CardTitle>
+              <CardDescription>Required information for filing</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="attorneyClientDispute"
+                    checked={formData.attorneyClientDispute}
+                    onCheckedChange={(checked) => handleInputChange("attorneyClientDispute", checked as boolean)}
+                  />
+                  <Label htmlFor="attorneyClientDispute" className="text-sm">
+                    This claim is about an attorney-client fee dispute
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="suingPublicEntity"
+                    checked={formData.suingPublicEntity}
+                    onCheckedChange={(checked) => handleInputChange("suingPublicEntity", checked as boolean)}
+                  />
+                  <Label htmlFor="suingPublicEntity" className="text-sm">
+                    I am suing a public entity (government agency)
+                  </Label>
+                </div>
+                
+                {formData.suingPublicEntity && (
+                  <div className="ml-6">
+                    <Label htmlFor="publicEntityClaimDate">Date claim was filed with public entity:</Label>
+                    <Input
+                      id="publicEntityClaimDate"
+                      type="date"
+                      value={formData.publicEntityClaimDate}
+                      onChange={(e) => handleInputChange("publicEntityClaimDate", e.target.value)}
+                      required={formData.suingPublicEntity}
+                    />
+                  </div>
+                )}
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="moreThan12Claims"
+                    checked={formData.moreThan12Claims}
+                    onCheckedChange={(checked) => handleInputChange("moreThan12Claims", checked as boolean)}
+                  />
+                  <Label htmlFor="moreThan12Claims" className="text-sm">
+                    I have filed more than 12 small claims cases in the last 12 months in California
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="claimOver2500"
+                    checked={formData.claimOver2500}
+                    onCheckedChange={(checked) => handleInputChange("claimOver2500", checked as boolean)}
+                  />
+                  <Label htmlFor="claimOver2500" className="text-sm">
+                    My claim is for more than $2,500 (I understand I cannot file more than 2 such cases per year)
+                  </Label>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Final Declaration and Submit */}
           <Card>
             <CardContent className="pt-6">
               <div className="space-y-4">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="understandsNoAppeal"
+                    checked={formData.understandsNoAppeal}
+                    onCheckedChange={(checked) => handleInputChange("understandsNoAppeal", checked as boolean)}
+                  />
+                  <Label htmlFor="understandsNoAppeal" className="text-sm">
+                    I understand that by filing a claim in small claims court, I have no right to appeal this claim. *
+                  </Label>
+                </div>
+                
+                <div className="flex items-start space-x-2">
                   <Checkbox
                     id="agreeToTerms"
                     checked={formData.agreeToTerms}
                     onCheckedChange={(checked) => handleInputChange("agreeToTerms", checked as boolean)}
                   />
                   <Label htmlFor="agreeToTerms" className="text-sm">
-                    I hereby confirm that I have read, understood, and agree to the terms and conditions set forth in
-                    this agreement. I acknowledge that the information shared under this agreement is confidential. *
+                    I declare under penalty of perjury under the laws of the State of California that the information above and on any attachments to this form is true and correct. *
                   </Label>
                 </div>
 
@@ -401,12 +1040,12 @@ export default function PDFFormGenerator() {
                     {isSubmitting ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                        Generating PDF...
+                        Generating SC-100 Form...
                       </>
                     ) : (
                       <>
                         <Send className="w-4 h-4 mr-2" />
-                        Generate PDF Document
+                        Generate SC-100 Form
                       </>
                     )}
                   </Button>
