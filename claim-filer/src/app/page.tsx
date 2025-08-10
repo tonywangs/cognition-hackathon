@@ -121,6 +121,7 @@ export default function PDFFormGenerator() {
   const [isLoadingPlaintiffAddress, setIsLoadingPlaintiffAddress] = useState(false)
   const [isLoadingDefendantAddress, setIsLoadingDefendantAddress] = useState(false)
   const [isLoadingCourtInfo, setIsLoadingCourtInfo] = useState(false)
+  const [isLoadingJurisdiction, setIsLoadingJurisdiction] = useState(false)
   const [formData, setFormData] = useState<FormData>({
     // Court Information
     courtName: "",
@@ -473,6 +474,71 @@ export default function PDFFormGenerator() {
       })
     } finally {
       setIsLoadingCourtInfo(false)
+    }
+  }
+
+  const handleGenerateJurisdiction = async () => {
+    // Check if required fields are filled
+    const requiredFields = ['claimType', 'claimReason', 'claimAmount', 'plaintiffCity', 'plaintiffState', 'plaintiffZip', 'defendantName', 'defendantCity', 'defendantState', 'defendantZip']
+    const missingField = requiredFields.find(field => !formData[field as keyof FormData])
+    
+    if (missingField) {
+      toast({
+        title: "Missing Required Information",
+        description: "Please complete claim details and both plaintiff and defendant addresses first.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoadingJurisdiction(true)
+
+    try {
+      const response = await fetch('/api/generate-jurisdiction', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          claimType: formData.claimType,
+          claimReason: formData.claimReason,
+          claimAmount: formData.claimAmount,
+          plaintiffCity: formData.plaintiffCity,
+          plaintiffState: formData.plaintiffState,
+          plaintiffZip: formData.plaintiffZip,
+          defendantCity: formData.defendantCity,
+          defendantState: formData.defendantState,
+          defendantZip: formData.defendantZip,
+          defendantName: formData.defendantName,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to generate jurisdiction information')
+      }
+
+      // Update the form with generated jurisdiction info
+      setFormData((prev) => ({
+        ...prev,
+        jurisdictionReason: result.jurisdictionReason || prev.jurisdictionReason,
+        jurisdictionZip: result.jurisdictionZip || prev.jurisdictionZip,
+      }))
+
+      toast({
+        title: "Jurisdiction Generated",
+        description: "The jurisdiction reason and zip code have been automatically filled based on your claim details.",
+      })
+    } catch (error) {
+      console.error("Jurisdiction generation error:", error)
+      toast({
+        title: "Generation Failed",
+        description: error instanceof Error ? error.message : "Could not generate jurisdiction information. Please enter manually.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoadingJurisdiction(false)
     }
   }
 
@@ -1511,35 +1577,57 @@ export default function PDFFormGenerator() {
               <CardDescription>Select the reason this court has jurisdiction</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="jurisdictionReason">This courthouse covers the area where: *</Label>
-                <Select
-                  value={formData.jurisdictionReason}
-                  onValueChange={(value) => handleInputChange("jurisdictionReason", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select jurisdiction reason" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="defendant-lives">Defendant lives or does business</SelectItem>
-                    <SelectItem value="property-damaged">Plaintiff's property was damaged</SelectItem>
-                    <SelectItem value="plaintiff-injured">Plaintiff was injured</SelectItem>
-                    <SelectItem value="contract-location">Contract was made, signed, performed, or broken</SelectItem>
-                    <SelectItem value="buyer-contract">Buyer/lessee signed contract or lives (personal/family goods)</SelectItem>
-                    <SelectItem value="retail-installment">Buyer signed retail installment contract</SelectItem>
-                    <SelectItem value="vehicle-finance">Vehicle finance sale location</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="jurisdictionZip">Zip code of the place checked above:</Label>
-                <Input
-                  id="jurisdictionZip"
-                  value={formData.jurisdictionZip}
-                  onChange={(e) => handleInputChange("jurisdictionZip", e.target.value)}
-                  placeholder="Zip code"
-                />
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="jurisdictionReason">This courthouse covers the area where: *</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGenerateJurisdiction}
+                      disabled={isLoadingJurisdiction}
+                      className="flex items-center gap-2"
+                    >
+                      {isLoadingJurisdiction ? (
+                        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Wand2 className="w-4 h-4" />
+                      )}
+                      Generate from Claim
+                    </Button>
+                  </div>
+                  <Select
+                    value={formData.jurisdictionReason}
+                    onValueChange={(value) => handleInputChange("jurisdictionReason", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select jurisdiction reason" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="defendant-lives">Defendant lives or does business</SelectItem>
+                      <SelectItem value="property-damaged">Plaintiff's property was damaged</SelectItem>
+                      <SelectItem value="plaintiff-injured">Plaintiff was injured</SelectItem>
+                      <SelectItem value="contract-location">Contract was made, signed, performed, or broken</SelectItem>
+                      <SelectItem value="buyer-contract">Buyer/lessee signed contract or lives (personal/family goods)</SelectItem>
+                      <SelectItem value="retail-installment">Buyer signed retail installment contract</SelectItem>
+                      <SelectItem value="vehicle-finance">Vehicle finance sale location</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Click "Generate from Claim" to auto-fill based on your claim details
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="jurisdictionZip">Zip code of the place checked above:</Label>
+                  <Input
+                    id="jurisdictionZip"
+                    value={formData.jurisdictionZip}
+                    onChange={(e) => handleInputChange("jurisdictionZip", e.target.value)}
+                    placeholder="Zip code"
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
