@@ -122,6 +122,8 @@ export default function PDFFormGenerator() {
   const [isLoadingDefendantAddress, setIsLoadingDefendantAddress] = useState(false)
   const [isLoadingCourtInfo, setIsLoadingCourtInfo] = useState(false)
   const [isLoadingJurisdiction, setIsLoadingJurisdiction] = useState(false)
+  const [isLoadingLegalText, setIsLoadingLegalText] = useState(false)
+  const [isLoadingPresuitDemand, setIsLoadingPresuitDemand] = useState(false)
   const [formData, setFormData] = useState<FormData>({
     // Court Information
     courtName: "",
@@ -381,6 +383,17 @@ export default function PDFFormGenerator() {
       return
     }
 
+    if (!formData.claimAmount) {
+      toast({
+        title: "Enter Claim Amount First",
+        description: "Please enter the amount you are claiming before generating legal text.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoadingLegalText(true)
+
     try {
       const response = await fetch('/api/generate-legal-text', {
         method: 'POST',
@@ -392,6 +405,11 @@ export default function PDFFormGenerator() {
           plaintiffName: formData.plaintiffName,
           defendantName: formData.defendantName,
           claimAmount: formData.claimAmount,
+          claimReason: formData.claimReason, // Pass existing reason to enhance
+          calculationExplanation: formData.calculationExplanation, // Pass existing calculation to enhance
+          incidentDate: formData.incidentDate,
+          incidentStartDate: formData.incidentStartDate,
+          incidentEndDate: formData.incidentEndDate,
         }),
       })
 
@@ -419,6 +437,8 @@ export default function PDFFormGenerator() {
         description: error instanceof Error ? error.message : "Failed to generate legal text. Please try again.",
         variant: "destructive",
       })
+    } finally {
+      setIsLoadingLegalText(false)
     }
   }
 
@@ -474,6 +494,60 @@ export default function PDFFormGenerator() {
       })
     } finally {
       setIsLoadingCourtInfo(false)
+    }
+  }
+
+  const handleGeneratePresuitDemand = async () => {
+    if (!formData.claimType || !formData.claimReason) {
+      toast({
+        title: "Missing Information",
+        description: "Please complete claim type and reason before generating explanation.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoadingPresuitDemand(true)
+
+    try {
+      const response = await fetch('/api/generate-presuit-demand', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          claimType: formData.claimType,
+          claimReason: formData.claimReason,
+          defendantName: formData.defendantName,
+          claimAmount: formData.claimAmount,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to generate explanation')
+      }
+
+      // Update the form with generated explanation
+      setFormData((prev) => ({
+        ...prev,
+        whyNotAsked: result.whyNotAsked,
+      }))
+
+      toast({
+        title: "Legal Explanation Generated",
+        description: "A legally valid explanation has been provided for not making a pre-suit demand.",
+      })
+    } catch (error) {
+      console.error("Pre-suit demand generation error:", error)
+      toast({
+        title: "Generation Failed",
+        description: error instanceof Error ? error.message : "Could not generate explanation. Please enter manually.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoadingPresuitDemand(false)
     }
   }
 
@@ -1509,12 +1583,25 @@ export default function PDFFormGenerator() {
                       variant="outline"
                       size="sm"
                       onClick={handleGenerateLegalText}
-                      className="w-full"
+                      disabled={isLoadingLegalText}
+                      className="w-full flex items-center justify-center gap-2"
                     >
-                      Generate Calculation Help for {formData.claimType.replace('-', ' ')}
+                      {isLoadingLegalText ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                          Generating Legal Reasoning...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="w-4 h-4" />
+                          Generate Proper Legal Reasoning
+                        </>
+                      )}
                     </Button>
                     <p className="text-xs text-gray-500 mt-1 text-center">
-                      AI will help explain how to calculate damages for this claim type
+                      {isLoadingLegalText 
+                        ? "AI is analyzing your claim and creating formal legal language..." 
+                        : "Transform your reasons into proper legal terminology for court"}
                     </p>
                   </div>
                 )}
@@ -1555,8 +1642,30 @@ export default function PDFFormGenerator() {
                 </div>
               </div>
               {formData.askedForPayment === false && (
-                <div>
-                  <Label htmlFor="whyNotAsked">If no, explain why not: *</Label>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="whyNotAsked">If no, explain why not: *</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGeneratePresuitDemand}
+                      disabled={isLoadingPresuitDemand}
+                      className="flex items-center gap-2"
+                    >
+                      {isLoadingPresuitDemand ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="w-4 h-4" />
+                          Generate Legal Explanation
+                        </>
+                      )}
+                    </Button>
+                  </div>
                   <Textarea
                     id="whyNotAsked"
                     value={formData.whyNotAsked}
@@ -1565,6 +1674,11 @@ export default function PDFFormGenerator() {
                     placeholder="Explain why you did not ask for payment first..."
                     rows={3}
                   />
+                  <p className="text-xs text-gray-500">
+                    {isLoadingPresuitDemand 
+                      ? "Generating legally acceptable explanation for court..." 
+                      : "Click 'Generate Legal Explanation' for a court-acceptable reason"}
+                  </p>
                 </div>
               )}
             </CardContent>
