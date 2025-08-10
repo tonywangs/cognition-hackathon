@@ -76,6 +76,7 @@ interface FormData {
   moreThanOneDefendant: boolean
   activeMilitaryDuty: boolean
   militaryDefendantName: string
+  needMoreSpace: boolean
   
   // Claim Information
   claimType: string
@@ -93,6 +94,8 @@ interface FormData {
   // Jurisdiction
   jurisdictionReason: string
   jurisdictionZip: string
+  jurisdictionLocation1: string
+  jurisdictionLocation2: string
   
   // Special Cases
   attorneyClientDispute: boolean
@@ -107,6 +110,10 @@ interface FormData {
   // Agreement
   understandsNoAppeal: boolean
   agreeToTerms: boolean
+  
+  // Signature Information
+  signatureDate: string
+  secondSignatureDate: string
 }
 
 export default function PDFFormGenerator() {
@@ -176,6 +183,7 @@ export default function PDFFormGenerator() {
     moreThanOneDefendant: false,
     activeMilitaryDuty: false,
     militaryDefendantName: "",
+    needMoreSpace: false,
     
     // Claim Information
     claimType: "",
@@ -193,6 +201,8 @@ export default function PDFFormGenerator() {
     // Jurisdiction
     jurisdictionReason: "",
     jurisdictionZip: "",
+    jurisdictionLocation1: "",
+    jurisdictionLocation2: "",
     
     // Special Cases
     attorneyClientDispute: false,
@@ -207,6 +217,10 @@ export default function PDFFormGenerator() {
     // Agreement
     understandsNoAppeal: false,
     agreeToTerms: false,
+    
+    // Signature Information  
+    signatureDate: "",
+    secondSignatureDate: "",
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -428,6 +442,7 @@ export default function PDFFormGenerator() {
       { field: 'claimReason', name: 'Reason for Claim' },
       { field: 'calculationExplanation', name: 'Calculation Explanation' },
       { field: 'jurisdictionReason', name: 'Jurisdiction Reason' },
+      { field: 'signatureDate', name: 'Signature Date' },
     ]
 
     const missingField = requiredFields.find(({ field }) => !formData[field as keyof FormData])
@@ -657,6 +672,7 @@ export default function PDFFormGenerator() {
       moreThanOneDefendant: false,
       activeMilitaryDuty: false,
       militaryDefendantName: "",
+      needMoreSpace: false,
       
       // Claim Information
       claimType: "",
@@ -674,6 +690,8 @@ export default function PDFFormGenerator() {
       // Jurisdiction
       jurisdictionReason: "",
       jurisdictionZip: "",
+      jurisdictionLocation1: "",
+      jurisdictionLocation2: "",
       
       // Special Cases
       attorneyClientDispute: false,
@@ -688,6 +706,10 @@ export default function PDFFormGenerator() {
       // Agreement
       understandsNoAppeal: false,
       agreeToTerms: false,
+      
+      // Signature Information
+      signatureDate: "",
+      secondSignatureDate: "",
     })
     setIsSubmitted(false)
     setPdfData(null)
@@ -920,6 +942,87 @@ export default function PDFFormGenerator() {
                     </Label>
                   </div>
                 </div>
+                
+                {/* Second Plaintiff Fields - Show when hasSecondPlaintiff is true */}
+                {formData.hasSecondPlaintiff && (
+                  <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Second Plaintiff Information</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="secondPlaintiffName">Full Name *</Label>
+                        <Input
+                          id="secondPlaintiffName"
+                          value={formData.secondPlaintiffName}
+                          onChange={(e) => handleInputChange("secondPlaintiffName", e.target.value)}
+                          required={formData.hasSecondPlaintiff}
+                          placeholder="Second plaintiff's full legal name"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="secondPlaintiffPhone">Phone Number</Label>
+                        <Input
+                          id="secondPlaintiffPhone"
+                          type="tel"
+                          value={formData.secondPlaintiffPhone}
+                          onChange={(e) => handleInputChange("secondPlaintiffPhone", e.target.value)}
+                          placeholder="(555) 123-4567"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="secondPlaintiffStreetAddress">Street Address *</Label>
+                        <Input
+                          id="secondPlaintiffStreetAddress"
+                          value={formData.secondPlaintiffStreetAddress}
+                          onChange={(e) => handleInputChange("secondPlaintiffStreetAddress", e.target.value)}
+                          required={formData.hasSecondPlaintiff}
+                          placeholder="123 Main Street"
+                        />
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <Label htmlFor="secondPlaintiffCity">City *</Label>
+                          <Input
+                            id="secondPlaintiffCity"
+                            value={formData.secondPlaintiffCity}
+                            onChange={(e) => handleInputChange("secondPlaintiffCity", e.target.value)}
+                            required={formData.hasSecondPlaintiff}
+                            placeholder="City"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="secondPlaintiffState">State *</Label>
+                          <Input
+                            id="secondPlaintiffState"
+                            value={formData.secondPlaintiffState}
+                            onChange={(e) => handleInputChange("secondPlaintiffState", e.target.value)}
+                            required={formData.hasSecondPlaintiff}
+                            placeholder="CA"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="secondPlaintiffZip">Zip *</Label>
+                          <Input
+                            id="secondPlaintiffZip"
+                            value={formData.secondPlaintiffZip}
+                            onChange={(e) => handleInputChange("secondPlaintiffZip", e.target.value)}
+                            required={formData.hasSecondPlaintiff}
+                            placeholder="90210"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="secondPlaintiffEmail">Email Address</Label>
+                        <Input
+                          id="secondPlaintiffEmail"
+                          type="email"
+                          value={formData.secondPlaintiffEmail}
+                          onChange={(e) => handleInputChange("secondPlaintiffEmail", e.target.value)}
+                          placeholder="email@example.com"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -1032,7 +1135,67 @@ export default function PDFFormGenerator() {
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="moreThanOneDefendant"
+                      checked={formData.moreThanOneDefendant}
+                      onCheckedChange={(checked) => handleInputChange("moreThanOneDefendant", checked as boolean)}
+                    />
+                    <Label htmlFor="moreThanOneDefendant" className="text-sm">
+                      Your case is against more than one defendant
+                    </Label>
+                  </div>
+                  
+                  {/* Additional Defendant Fields - Show when moreThanOneDefendant is true */}
+                  {formData.moreThanOneDefendant && (
+                    <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">Additional Defendant Information</h4>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="additionalDefendantName">Full Name/Business Name</Label>
+                          <Input
+                            id="additionalDefendantName"
+                            placeholder="Additional defendant's full legal name or business name"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="additionalDefendantAddress">Street Address</Label>
+                          <Input
+                            id="additionalDefendantAddress"
+                            placeholder="123 Main Street"
+                          />
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            <Label htmlFor="additionalDefendantCity">City</Label>
+                            <Input
+                              id="additionalDefendantCity"
+                              placeholder="City"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="additionalDefendantState">State</Label>
+                            <Input
+                              id="additionalDefendantState"
+                              placeholder="CA"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="additionalDefendantZip">Zip</Label>
+                            <Input
+                              id="additionalDefendantZip"
+                              placeholder="90210"
+                            />
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          Note: For multiple defendants, you may need to file separate forms or attach additional sheets with complete defendant information.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="activeMilitaryDuty"
@@ -1040,11 +1203,11 @@ export default function PDFFormGenerator() {
                       onCheckedChange={(checked) => handleInputChange("activeMilitaryDuty", checked as boolean)}
                     />
                     <Label htmlFor="activeMilitaryDuty" className="text-sm">
-                      Defendant is on active military duty
+                      Any defendant is on active military duty
                     </Label>
                   </div>
                   {formData.activeMilitaryDuty && (
-                    <div>
+                    <div className="ml-6">
                       <Label htmlFor="militaryDefendantName">Military Defendant Name</Label>
                       <Input
                         id="militaryDefendantName"
@@ -1052,6 +1215,35 @@ export default function PDFFormGenerator() {
                         onChange={(e) => handleInputChange("militaryDefendantName", e.target.value)}
                         placeholder="Name of defendant on military duty"
                       />
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="needMoreSpace"
+                      checked={formData.needMoreSpace}
+                      onCheckedChange={(checked) => handleInputChange("needMoreSpace", checked as boolean)}
+                    />
+                    <Label htmlFor="needMoreSpace" className="text-sm">
+                      You need more space (attach additional sheet)
+                    </Label>
+                  </div>
+                  
+                  {/* Additional Space Field - Show when needMoreSpace is true */}
+                  {formData.needMoreSpace && (
+                    <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">Additional Information</h4>
+                      <div>
+                        <Label htmlFor="additionalSpace">Additional details (attach to your court filing)</Label>
+                        <Textarea
+                          id="additionalSpace"
+                          placeholder="Enter additional information that didn't fit in the above fields. This will need to be attached as a separate sheet to your court filing."
+                          rows={4}
+                        />
+                        <p className="text-xs text-gray-600 mt-2">
+                          Note: This information should be printed separately and attached to your SC-100 form when filing with the court.
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1272,6 +1464,26 @@ export default function PDFFormGenerator() {
                   placeholder="Zip code"
                 />
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="jurisdictionLocation1">Additional location details (if needed):</Label>
+                  <Input
+                    id="jurisdictionLocation1"
+                    value={formData.jurisdictionLocation1}
+                    onChange={(e) => handleInputChange("jurisdictionLocation1", e.target.value)}
+                    placeholder="Street or landmark"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="jurisdictionLocation2">Additional location details (cont.):</Label>
+                  <Input
+                    id="jurisdictionLocation2"
+                    value={formData.jurisdictionLocation2}
+                    onChange={(e) => handleInputChange("jurisdictionLocation2", e.target.value)}
+                    placeholder="Additional info"
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -1367,6 +1579,30 @@ export default function PDFFormGenerator() {
                   <Label htmlFor="agreeToTerms" className="text-sm">
                     I declare under penalty of perjury under the laws of the State of California that the information above and on any attachments to this form is true and correct. *
                   </Label>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 pt-4">
+                  <div>
+                    <Label htmlFor="signatureDate">Signature Date *</Label>
+                    <Input
+                      id="signatureDate"
+                      type="date"
+                      value={formData.signatureDate}
+                      onChange={(e) => handleInputChange("signatureDate", e.target.value)}
+                      required
+                    />
+                  </div>
+                  {formData.hasSecondPlaintiff && (
+                    <div>
+                      <Label htmlFor="secondSignatureDate">Second Plaintiff Signature Date</Label>
+                      <Input
+                        id="secondSignatureDate"
+                        type="date"
+                        value={formData.secondSignatureDate}
+                        onChange={(e) => handleInputChange("secondSignatureDate", e.target.value)}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-4 pt-4">

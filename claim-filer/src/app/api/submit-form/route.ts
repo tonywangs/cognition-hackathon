@@ -66,6 +66,7 @@ interface FormData {
   moreThanOneDefendant: boolean
   activeMilitaryDuty: boolean
   militaryDefendantName: string
+  needMoreSpace: boolean
   
   // Claim Information
   claimAmount: string
@@ -82,6 +83,8 @@ interface FormData {
   // Jurisdiction
   jurisdictionReason: string
   jurisdictionZip: string
+  jurisdictionLocation1: string
+  jurisdictionLocation2: string
   
   // Special Cases
   attorneyClientDispute: boolean
@@ -96,6 +99,10 @@ interface FormData {
   // Agreement
   understandsNoAppeal: boolean
   agreeToTerms: boolean
+  
+  // Signature Information
+  signatureDate: string
+  secondSignatureDate: string
 }
 
 export async function POST(request: NextRequest) {
@@ -220,6 +227,10 @@ export async function POST(request: NextRequest) {
       // Jurisdiction zip code
       ['SC-100[0].Page3[0].List6[0].item6[0].ZipCode1[0]', formData.jurisdictionZip],
       
+      // Additional jurisdiction location details
+      ['SC-100[0].Page3[0].List5[0].Lie[0].FillField55[0]', formData.jurisdictionLocation1],
+      ['SC-100[0].Page3[0].List5[0].Lie[0].FillField56[0]', formData.jurisdictionLocation2],
+      
       // Public entity claim date (if applicable)
       ['SC-100[0].Page3[0].List8[0].item8[0].Date4[0]', formData.suingPublicEntity ? formData.publicEntityClaimDate : ''],
       
@@ -228,7 +239,9 @@ export async function POST(request: NextRequest) {
       ['SC-100[0].Page4[0].PxCaption[0].CaseNumber_ft[0]', formData.caseNumber],
       
       // Signature Fields
+      ['SC-100[0].Page4[0].Sign[0].Date1[0]', formData.signatureDate],
       ['SC-100[0].Page4[0].Sign[0].PlaintiffName1[0]', formData.plaintiffName],
+      ['SC-100[0].Page4[0].Sign[0].Date2[0]', formData.hasSecondPlaintiff ? formData.secondSignatureDate : ''],
       ['SC-100[0].Page4[0].Sign[0].PlaintiffName2[0]', formData.hasSecondPlaintiff ? formData.secondPlaintiffName : ''],
     ])
     
@@ -250,6 +263,72 @@ export async function POST(request: NextRequest) {
           }
         } else if (!field) {
           console.log(`  ⚠️ ${exactFieldName}: Field not found in PDF`)
+        }
+      }
+    }
+    
+    // Handle checkbox mappings separately
+    const checkboxMappings = new Map([
+      // Plaintiff checkboxes (Page 2)
+      ['SC-100[0].Page2[0].List1[0].Item1[0].Checkbox1[0]', formData.moreThanTwoPlaintiffs],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].Checkbox2[0]', formData.fictitiousName],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].Checkbox3[0]', formData.paydayLender],
+      
+      // Defendant checkboxes (Page 2)
+      ['SC-100[0].Page2[0].List2[0].item2[0].Checkbox4[0]', formData.moreThanOneDefendant],
+      ['SC-100[0].Page2[0].List2[0].item2[0].Checkbox5[0]', formData.activeMilitaryDuty],
+      
+      // Claim checkboxes (Page 3)
+      ['SC-100[0].Page3[0].List3[0].Checkbox[0].Checkbox1[0]', formData.needMoreSpace],
+      
+      // Pre-suit demand checkboxes (Yes/No radio buttons)
+      ['SC-100[0].Page3[0].List4[0].Item4[0].Checkbox50[0]', formData.askedForPayment === true],
+      ['SC-100[0].Page3[0].List4[0].Item4[0].Checkbox50[1]', formData.askedForPayment === false],
+      
+      // Jurisdiction reason checkboxes (Page 3) - based on jurisdictionReason selection
+      ['SC-100[0].Page3[0].List5[0].Lia[0].Checkbox4[0]', formData.jurisdictionReason === 'defendant-lives'],
+      ['SC-100[0].Page3[0].List5[0].Lib[0].Checkbox5[0]', formData.jurisdictionReason === 'property-damaged'],
+      ['SC-100[0].Page3[0].List5[0].Lic[0].Checkbox6[0]', formData.jurisdictionReason === 'plaintiff-injured'],
+      ['SC-100[0].Page3[0].List5[0].Lid[0].Checkbox7[0]', formData.jurisdictionReason === 'contract-location'],
+      ['SC-100[0].Page3[0].List5[0].Lie[0].Checkbox8[0]', formData.jurisdictionReason === 'other'],
+      
+      // Attorney-client dispute checkbox (Page 3)
+      ['SC-100[0].Page3[0].List7[0].item7[0].Checkbox60[0]', formData.attorneyClientDispute === true],
+      ['SC-100[0].Page3[0].List7[0].item7[0].Checkbox60[1]', formData.attorneyClientDispute === false],
+      ['SC-100[0].Page3[0].List7[0].item7[0].Checkbox11[0]', formData.arbitrationFiled],
+      
+      // Public entity checkbox (Page 3)
+      ['SC-100[0].Page3[0].List8[0].item8[0].Checkbox61[0]', formData.suingPublicEntity === true],
+      ['SC-100[0].Page3[0].List8[0].item8[0].Checkbox61[1]', formData.suingPublicEntity === false],
+      ['SC-100[0].Page3[0].List8[0].item8[0].Checkbox14[0]', formData.suingPublicEntity],
+      
+      // Filing limits checkboxes (Page 4) 
+      ['SC-100[0].Page4[0].List9[0].Item9[0].Checkbox62[0]', formData.moreThan12Claims === true],
+      ['SC-100[0].Page4[0].List9[0].Item9[0].Checkbox62[1]', formData.moreThan12Claims === false],
+      ['SC-100[0].Page4[0].List10[0].Checkbox63[0]', formData.claimOver2500 === true],
+      ['SC-100[0].Page4[0].List10[0].Checkbox63[1]', formData.claimOver2500 === false],
+    ])
+    
+    // Fill checkboxes
+    for (const [exactFieldName, shouldCheck] of checkboxMappings) {
+      if (shouldCheck !== undefined) {
+        fieldsAttemptedCount++
+        const field = fields.find(f => f.getName() === exactFieldName)
+        if (field && field.constructor.name === 'PDFCheckBox') {
+          try {
+            if (shouldCheck) {
+              ;(field as any).check()
+              console.log(`  ✅ ${exactFieldName.split('.').pop()}: CHECKED`)
+            } else {
+              ;(field as any).uncheck()
+              console.log(`  ◯ ${exactFieldName.split('.').pop()}: UNCHECKED`)
+            }
+            fieldsFilledCount++
+          } catch (e) {
+            console.log(`  ❌ ${exactFieldName.split('.').pop()}: CHECKBOX FAILED - ${e.message}`)
+          }
+        } else if (!field) {
+          console.log(`  ⚠️ ${exactFieldName}: Checkbox field not found in PDF`)
         }
       }
     }
