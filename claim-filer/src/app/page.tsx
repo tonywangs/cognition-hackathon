@@ -1829,10 +1829,10 @@ export default function PDFFormGenerator() {
             </CardContent>
           </Card>
 
-          {/* Special Cases and Declarations */}
+          {/* Additional Questions */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Additional Questions</CardTitle>
+              <CardTitle className="text-lg">8. Additional Questions</CardTitle>
               <CardDescription>Required information for filing</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1897,9 +1897,13 @@ export default function PDFFormGenerator() {
             </CardContent>
           </Card>
 
-          {/* Final Declaration and Submit */}
+          {/* Signature and Declarations */}
           <Card>
-            <CardContent className="pt-6">
+            <CardHeader>
+              <CardTitle className="text-lg">9. Signature and Declarations</CardTitle>
+              <CardDescription>Legal declarations and signature</CardDescription>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-4">
                 <div className="flex items-start space-x-2">
                   <Checkbox
