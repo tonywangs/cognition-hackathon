@@ -1093,21 +1093,6 @@ export default function PDFFormGenerator() {
                   </div>
                 </div>
               </div>
-              {formData.claimType && (
-                <div className="pt-4 border-t">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleGenerateLegalText}
-                    className="w-full"
-                  >
-                    Generate Legal Description for {formData.claimType.replace('-', ' ')}
-                  </Button>
-                  <p className="text-xs text-gray-500 mt-2 text-center">
-                    This will use AI to generate appropriate legal language for your claim type
-                  </p>
-                </div>
-              )}
             </CardContent>
           </Card>
 
@@ -1183,6 +1168,22 @@ export default function PDFFormGenerator() {
                   placeholder="Explain your calculation (do not include court costs or service fees)..."
                   rows={3}
                 />
+                {formData.claimType && (
+                  <div className="mt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGenerateLegalText}
+                      className="w-full"
+                    >
+                      Generate Calculation Help for {formData.claimType.replace('-', ' ')}
+                    </Button>
+                    <p className="text-xs text-gray-500 mt-1 text-center">
+                      AI will help explain how to calculate damages for this claim type
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
