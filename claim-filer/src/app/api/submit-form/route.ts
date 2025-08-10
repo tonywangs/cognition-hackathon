@@ -371,7 +371,7 @@ export async function POST(request: NextRequest) {
             }
             fieldsFilledCount++
           } catch (e) {
-            console.log(`  ❌ ${exactFieldName.split('.').pop()}: CHECKBOX FAILED - ${e.message}`)
+            console.log(`  ❌ ${exactFieldName.split('.').pop()}: CHECKBOX FAILED - ${e instanceof Error ? e.message : 'Unknown error'}`)
           }
         } else if (!field) {
           console.log(`  ⚠️ ${exactFieldName}: Checkbox field not found in PDF`)
