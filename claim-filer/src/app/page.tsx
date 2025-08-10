@@ -50,6 +50,7 @@ export default function PDFFormGenerator() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [pdfData, setPdfData] = useState<string | null>(null)
 
   const handleInputChange = (field: keyof FormData, value: string | boolean) => {
     setFormData((prev) => ({
@@ -89,10 +90,15 @@ export default function PDFFormGenerator() {
 
       console.log("Form submission successful:", result)
 
+      // Store the PDF data
+      if (result.data?.pdfBase64) {
+        setPdfData(result.data.pdfBase64)
+      }
+
       setIsSubmitted(true)
       toast({
         title: "PDF Generated Successfully!",
-        description: "Your document has been created and will be available for download shortly.",
+        description: "Your document has been created and is ready for download.",
       })
     } catch (error) {
       console.error("Form submission error:", error)
@@ -107,7 +113,34 @@ export default function PDFFormGenerator() {
   }
 
   const handleDownload = () => {
-    // Simulate PDF download
+    if (!pdfData) {
+      toast({
+        title: "Error",
+        description: "No PDF data available to download.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Convert base64 to blob
+    const byteCharacters = atob(pdfData)
+    const byteNumbers = new Array(byteCharacters.length)
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i)
+    }
+    const byteArray = new Uint8Array(byteNumbers)
+    const blob = new Blob([byteArray], { type: 'application/pdf' })
+    
+    // Create download link
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `small_claims_${formData.firstName}_${formData.lastName}_${Date.now()}.pdf`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    
     toast({
       title: "Download Started",
       description: "Your PDF document is being downloaded.",
@@ -132,6 +165,7 @@ export default function PDFFormGenerator() {
       agreeToTerms: false,
     })
     setIsSubmitted(false)
+    setPdfData(null)
   }
 
   if (isSubmitted) {
