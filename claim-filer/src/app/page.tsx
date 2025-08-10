@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { FileText, Download, Send, CheckCircle, Search, MapPin } from "lucide-react"
+import { FileText, Download, Send, CheckCircle, Search, MapPin, Wand2 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 
 interface FormData {
@@ -120,6 +120,7 @@ export default function PDFFormGenerator() {
   const [isLoadingBusinessInfo, setIsLoadingBusinessInfo] = useState(false)
   const [isLoadingPlaintiffAddress, setIsLoadingPlaintiffAddress] = useState(false)
   const [isLoadingDefendantAddress, setIsLoadingDefendantAddress] = useState(false)
+  const [isLoadingCourtInfo, setIsLoadingCourtInfo] = useState(false)
   const [formData, setFormData] = useState<FormData>({
     // Court Information
     courtName: "",
@@ -417,6 +418,61 @@ export default function PDFFormGenerator() {
         description: error instanceof Error ? error.message : "Failed to generate legal text. Please try again.",
         variant: "destructive",
       })
+    }
+  }
+
+  const handleGenerateCourtInfo = async () => {
+    if (!formData.plaintiffStreetAddress || !formData.plaintiffCity || !formData.plaintiffState || !formData.plaintiffZip) {
+      toast({
+        title: "Complete Plaintiff Address First",
+        description: "Please enter your complete address before generating court information.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoadingCourtInfo(true)
+
+    try {
+      const response = await fetch('/api/generate-court-info', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          streetAddress: formData.plaintiffStreetAddress,
+          city: formData.plaintiffCity,
+          state: formData.plaintiffState,
+          zip: formData.plaintiffZip,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to generate court information')
+      }
+
+      // Update the form with generated court info
+      setFormData((prev) => ({
+        ...prev,
+        courtName: result.courtName || prev.courtName,
+        courtAddress: result.courtAddress || prev.courtAddress,
+      }))
+
+      toast({
+        title: "Court Information Generated",
+        description: "The court name and address have been automatically filled based on your location.",
+      })
+    } catch (error) {
+      console.error("Court info generation error:", error)
+      toast({
+        title: "Generation Failed",
+        description: error instanceof Error ? error.message : "Could not generate court information. Please enter manually.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoadingCourtInfo(false)
     }
   }
 
@@ -780,56 +836,6 @@ export default function PDFFormGenerator() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Court Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Court Information</CardTitle>
-              <CardDescription>Enter the court details where you are filing</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="courtName">Superior Court of California, County of *</Label>
-                <Input
-                  id="courtName"
-                  value={formData.courtName}
-                  onChange={(e) => handleInputChange("courtName", e.target.value)}
-                  required
-                  placeholder="e.g., Los Angeles"
-                />
-              </div>
-              <div>
-                <Label htmlFor="courtAddress">Court Address *</Label>
-                <Input
-                  id="courtAddress"
-                  value={formData.courtAddress}
-                  onChange={(e) => handleInputChange("courtAddress", e.target.value)}
-                  required
-                  placeholder="Court street address"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="caseNumber">Case Number</Label>
-                  <Input
-                    id="caseNumber"
-                    value={formData.caseNumber}
-                    onChange={(e) => handleInputChange("caseNumber", e.target.value)}
-                    placeholder="Leave blank - court will assign"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="caseName">Case Name</Label>
-                  <Input
-                    id="caseName"
-                    value={formData.caseName}
-                    onChange={(e) => handleInputChange("caseName", e.target.value)}
-                    placeholder="Your name vs Defendant name"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           <div className="grid md:grid-cols-2 gap-6">
             {/* Plaintiff Information */}
             <Card>
@@ -1251,10 +1257,80 @@ export default function PDFFormGenerator() {
             </Card>
           </div>
 
+          {/* Court Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">3. Court Information</CardTitle>
+              <CardDescription>Enter the court details where you are filing</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="courtName">Superior Court of California, County of *</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="courtName"
+                    value={formData.courtName}
+                    onChange={(e) => handleInputChange("courtName", e.target.value)}
+                    required
+                    placeholder="e.g., Los Angeles"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGenerateCourtInfo}
+                    disabled={isLoadingCourtInfo}
+                    className="px-3"
+                  >
+                    {isLoadingCourtInfo ? (
+                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Wand2 className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Click the wand button to auto-generate court info based on your address
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="courtAddress">Court Address *</Label>
+                <Input
+                  id="courtAddress"
+                  value={formData.courtAddress}
+                  onChange={(e) => handleInputChange("courtAddress", e.target.value)}
+                  required
+                  placeholder="Court street address"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="caseNumber">Case Number</Label>
+                  <Input
+                    id="caseNumber"
+                    value={formData.caseNumber}
+                    onChange={(e) => handleInputChange("caseNumber", e.target.value)}
+                    placeholder="Leave blank - court will assign"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="caseName">Case Name</Label>
+                  <Input
+                    id="caseName"
+                    value={formData.caseName}
+                    onChange={(e) => handleInputChange("caseName", e.target.value)}
+                    placeholder="Your name vs Defendant name"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Claim Type Selector */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">3. Type of Claim</CardTitle>
+              <CardTitle className="text-lg">4. Type of Claim</CardTitle>
               <CardDescription>Select the type of small claims case that best describes your situation</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1291,7 +1367,7 @@ export default function PDFFormGenerator() {
           {/* Claim Details */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">4. Your Claim Details</CardTitle>
+              <CardTitle className="text-lg">5. Your Claim Details</CardTitle>
               <CardDescription>Specific details about what you are claiming</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1383,7 +1459,7 @@ export default function PDFFormGenerator() {
           {/* Pre-suit Demand */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">5. Pre-suit Demand</CardTitle>
+              <CardTitle className="text-lg">6. Pre-suit Demand</CardTitle>
               <CardDescription>Required: You must ask defendant for payment before filing</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1431,7 +1507,7 @@ export default function PDFFormGenerator() {
           {/* Jurisdiction */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">6. Why are you filing at this courthouse?</CardTitle>
+              <CardTitle className="text-lg">7. Why are you filing at this courthouse?</CardTitle>
               <CardDescription>Select the reason this court has jurisdiction</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
