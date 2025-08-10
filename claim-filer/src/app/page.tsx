@@ -124,6 +124,7 @@ export default function PDFFormGenerator() {
   const [isLoadingJurisdiction, setIsLoadingJurisdiction] = useState(false)
   const [isLoadingLegalText, setIsLoadingLegalText] = useState(false)
   const [isLoadingPresuitDemand, setIsLoadingPresuitDemand] = useState(false)
+  const [isLoadingSecondPlaintiffAddress, setIsLoadingSecondPlaintiffAddress] = useState(false)
   const [formData, setFormData] = useState<FormData>({
     // Court Information
     courtName: "",
@@ -312,6 +313,8 @@ export default function PDFFormGenerator() {
       setIsLoadingPlaintiffAddress(true)
     } else if (addressField === 'defendantStreetAddress') {
       setIsLoadingDefendantAddress(true)
+    } else if (addressField === 'secondPlaintiffStreetAddress') {
+      setIsLoadingSecondPlaintiffAddress(true)
     }
 
     try {
@@ -350,6 +353,14 @@ export default function PDFFormGenerator() {
           defendantState: addressInfo.state || prev.defendantState,
           defendantZip: addressInfo.zip || prev.defendantZip,
         }))
+      } else if (addressField === 'secondPlaintiffStreetAddress') {
+        setFormData((prev) => ({
+          ...prev,
+          secondPlaintiffStreetAddress: addressInfo.street || prev.secondPlaintiffStreetAddress,
+          secondPlaintiffCity: addressInfo.city || prev.secondPlaintiffCity,
+          secondPlaintiffState: addressInfo.state || prev.secondPlaintiffState,
+          secondPlaintiffZip: addressInfo.zip || prev.secondPlaintiffZip,
+        }))
       }
 
       toast({
@@ -369,6 +380,8 @@ export default function PDFFormGenerator() {
         setIsLoadingPlaintiffAddress(false)
       } else if (addressField === 'defendantStreetAddress') {
         setIsLoadingDefendantAddress(false)
+      } else if (addressField === 'secondPlaintiffStreetAddress') {
+        setIsLoadingSecondPlaintiffAddress(false)
       }
     }
   }
@@ -1116,13 +1129,33 @@ export default function PDFFormGenerator() {
                       </div>
                       <div>
                         <Label htmlFor="secondPlaintiffStreetAddress">Street Address *</Label>
-                        <Input
-                          id="secondPlaintiffStreetAddress"
-                          value={formData.secondPlaintiffStreetAddress}
-                          onChange={(e) => handleInputChange("secondPlaintiffStreetAddress", e.target.value)}
-                          required={formData.hasSecondPlaintiff}
-                          placeholder="123 Main Street"
-                        />
+                        <div className="flex gap-2">
+                          <Input
+                            id="secondPlaintiffStreetAddress"
+                            value={formData.secondPlaintiffStreetAddress}
+                            onChange={(e) => handleInputChange("secondPlaintiffStreetAddress", e.target.value)}
+                            required={formData.hasSecondPlaintiff}
+                            placeholder="123 Main Street"
+                            className="flex-1"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleAutocompleteAddress('secondPlaintiffStreetAddress')}
+                            disabled={isLoadingSecondPlaintiffAddress}
+                            className="px-3"
+                          >
+                            {isLoadingSecondPlaintiffAddress ? (
+                              <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <MapPin className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Click the location button to auto-complete city, state, and zip
+                        </p>
                       </div>
                       <div className="grid grid-cols-3 gap-2">
                         <div>
