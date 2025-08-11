@@ -209,10 +209,11 @@ export async function POST(request: NextRequest) {
       ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffCity1[0]', formData.plaintiffCity],
       ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffState1[0]', formData.plaintiffState],
       ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffZip1[0]', formData.plaintiffZip],
-      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingAddress1[0]', formData.plaintiffMailingAddress || formData.plaintiffStreetAddress],
-      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingCity1[0]', formData.plaintiffMailingCity || formData.plaintiffCity],
-      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingState1[0]', formData.plaintiffMailingState || formData.plaintiffState],
-      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingZip1[0]', formData.plaintiffMailingZip || formData.plaintiffZip],
+      // Mailing address fields intentionally left blank unless specifically filled
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingAddress1[0]', formData.plaintiffMailingAddress || ''],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingCity1[0]', formData.plaintiffMailingCity || ''],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingState1[0]', formData.plaintiffMailingState || ''],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingZip1[0]', formData.plaintiffMailingZip || ''],
       ['SC-100[0].Page2[0].List1[0].Item1[0].EmailAdd1[0]', formData.plaintiffEmail],
       
       // Second Plaintiff (if exists)
@@ -222,10 +223,10 @@ export async function POST(request: NextRequest) {
       ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffCity2[0]', formData.hasSecondPlaintiff ? formData.secondPlaintiffCity : ''],
       ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffState2[0]', formData.hasSecondPlaintiff ? formData.secondPlaintiffState : ''],
       ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffZip2[0]', formData.hasSecondPlaintiff ? formData.secondPlaintiffZip : ''],
-      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingAddress2[0]', formData.hasSecondPlaintiff ? (formData.secondPlaintiffMailingAddress || formData.secondPlaintiffStreetAddress) : ''],
-      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingCity2[0]', formData.hasSecondPlaintiff ? (formData.secondPlaintiffMailingCity || formData.secondPlaintiffCity) : ''],
-      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingState2[0]', formData.hasSecondPlaintiff ? (formData.secondPlaintiffMailingState || formData.secondPlaintiffState) : ''],
-      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingZip2[0]', formData.hasSecondPlaintiff ? (formData.secondPlaintiffMailingZip || formData.secondPlaintiffZip) : ''],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingAddress2[0]', formData.hasSecondPlaintiff ? (formData.secondPlaintiffMailingAddress || '') : ''],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingCity2[0]', formData.hasSecondPlaintiff ? (formData.secondPlaintiffMailingCity || '') : ''],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingState2[0]', formData.hasSecondPlaintiff ? (formData.secondPlaintiffMailingState || '') : ''],
+      ['SC-100[0].Page2[0].List1[0].Item1[0].PlaintiffMailingZip2[0]', formData.hasSecondPlaintiff ? (formData.secondPlaintiffMailingZip || '') : ''],
       ['SC-100[0].Page2[0].List1[0].Item1[0].EmailAdd2[0]', formData.hasSecondPlaintiff ? formData.secondPlaintiffEmail : ''],
       
       // Defendant Information
@@ -235,10 +236,10 @@ export async function POST(request: NextRequest) {
       ['SC-100[0].Page2[0].List2[0].item2[0].DefendantCity1[0]', formData.defendantCity],
       ['SC-100[0].Page2[0].List2[0].item2[0].DefendantState1[0]', formData.defendantState],
       ['SC-100[0].Page2[0].List2[0].item2[0].DefendantZip1[0]', formData.defendantZip],
-      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantMailingAddress1[0]', formData.defendantMailingAddress || formData.defendantStreetAddress],
-      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantMailingCity1[0]', formData.defendantMailingCity || formData.defendantCity],
-      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantMailingState1[0]', formData.defendantMailingState || formData.defendantState],
-      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantMailingZip1[0]', formData.defendantMailingZip || formData.defendantZip],
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantMailingAddress1[0]', formData.defendantMailingAddress || ''],
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantMailingCity1[0]', formData.defendantMailingCity || ''],
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantMailingState1[0]', formData.defendantMailingState || ''],
+      ['SC-100[0].Page2[0].List2[0].item2[0].DefendantMailingZip1[0]', formData.defendantMailingZip || ''],
       
       // Service Person Information
       ['SC-100[0].Page2[0].List2[0].item2[0].DefendantName2[0]', formData.servicePersonName],
