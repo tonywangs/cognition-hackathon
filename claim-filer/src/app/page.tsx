@@ -1011,6 +1011,21 @@ export default function PDFFormGenerator() {
                   Create Another
                 </Button>
               </div>
+              
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-800 text-center">
+                  Need more information about filing your small claims case?{" "}
+                  <a 
+                    href="https://selfhelp.courts.ca.gov/small-claims-california"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium underline hover:text-blue-600 transition-colors"
+                  >
+                    Visit California Courts Self-Help Guide
+                  </a>{" "}
+                  for additional resources and filing instructions.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
