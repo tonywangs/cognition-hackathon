@@ -979,7 +979,16 @@ export default function PDFFormGenerator() {
         <div className="max-w-2xl mx-auto p-6 pt-12">
           <Card className="text-center">
             <CardHeader>
-              <CardTitle className="text-2xl text-green-700">Small Claims Form Generated Successfully!</CardTitle>
+              <div className="flex justify-center mb-4">
+                <Image
+                  src="/cuteFinishedLogo.png"
+                  alt="Success Logo"
+                  width={80}
+                  height={80}
+                  className="rounded-lg"
+                />
+              </div>
+              <CardTitle className="text-2xl text-blue-900 font-bold">Small Claims Form Generated Successfully!</CardTitle>
               <CardDescription>Your SC-100 Plaintiff's Claim form has been created with your provided information.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
