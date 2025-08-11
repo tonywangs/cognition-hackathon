@@ -957,13 +957,28 @@ export default function PDFFormGenerator() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 p-4">
-        <div className="max-w-2xl mx-auto pt-20">
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center space-x-3 cursor-pointer" onClick={handleReset}>
+                <Image
+                  src="/cuteLawLogo.png"
+                  alt="Law Logo"
+                  width={40}
+                  height={40}
+                  className="rounded-lg"
+                />
+                <h1 className="text-xl font-bold text-gray-900 hover:text-amber-600 transition-colors">Small Claims Court California Form Generator</h1>
+              </div>
+            </div>
+          </div>
+        </header>
+        
+        <div className="max-w-2xl mx-auto p-6 pt-12">
           <Card className="text-center">
             <CardHeader>
-              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                <CheckCircle className="w-8 h-8 text-green-600" />
-              </div>
               <CardTitle className="text-2xl text-green-700">Small Claims Form Generated Successfully!</CardTitle>
               <CardDescription>Your SC-100 Plaintiff's Claim form has been created with your provided information.</CardDescription>
             </CardHeader>
